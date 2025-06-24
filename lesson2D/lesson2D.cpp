@@ -1,8 +1,9 @@
-﻿#include<windows.h>
-
+﻿
 //int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
 //
 //}
+
+#include<windows.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
