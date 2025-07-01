@@ -4,10 +4,31 @@
 //}
 
 #include<windows.h>
+#include <iostream>
+
+struct {
+
+	HWND hWnd;
+	int width, height;
+
+
+}window;
+
+
+void InitWindow() {
+
+	RECT r;
+	GetClientRect(window.hWnd, &r);
+	window.width = r.right - r.left;
+	window.height = r.bottom - r.top;
+
+}
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
+
+	int WEIGHT = GetSystemMetrics(SM_CXSCREEN);
 
 	const wchar_t CLASS_NAME[] = L"KAMEN";
 
@@ -18,23 +39,27 @@ int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int n
 	wc.lpszClassName = CLASS_NAME;
 
 	RegisterClass(&wc);
+	
 
-
-	HWND hwnd = CreateWindowEx(
+	 window.hWnd = CreateWindowEx(
 		0,
 		CLASS_NAME,
 		L"JOB IS DONE",
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		 WS_POPUP
+		/*WS_CAPTION | WS_SYSMENU | WS_OVERLAPPED*/,
+		CW_USEDEFAULT, CW_USEDEFAULT, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
 		NULL,
 		NULL,
 		hI,
 		NULL
 	);
 
-	if (hwnd == NULL) return 0;
 
-	ShowWindow(hwnd, nCmdShow);
+	if (window.hWnd == NULL) return 0;
+
+	InitWindow();
+
+	ShowWindow(window.hWnd, nCmdShow);
 
 	MSG msg = { };
 
@@ -52,12 +77,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 	switch (uMsg) {
 
+	case WM_SIZE:
+		InitWindow();
+		break;
+
 	case WM_DESTROY: {
 
 		PostQuitMessage(0);
 		return 0;
 	}
 
+	case WM_KEYDOWN:
+		if (wParam == VK_ESCAPE)
+			DestroyWindow(hwnd);
 
 	case WM_PAINT:
 	{
@@ -67,7 +99,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
 
-		EndPaint(hwnd, &ps);
+		EndPaint(window.hWnd, &ps);
 
 	}
 	return 0;
