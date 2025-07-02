@@ -139,7 +139,6 @@
     <ResourceCompile Include="lesson2D.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\..\Downloads\les.bmp" />
     <Image Include="lesson2D.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
