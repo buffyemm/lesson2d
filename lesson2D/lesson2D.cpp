@@ -14,6 +14,7 @@ struct {
 
 }window;
 
+HBITMAP hBack;
 
 void InitWindow() {
 
@@ -24,9 +25,18 @@ void InitWindow() {
 
 }
 
+void InitGame() {
+
+	hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
+
+	//InitGame();
 
 	int WEIGHT = GetSystemMetrics(SM_CXSCREEN);
 
@@ -89,15 +99,35 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 	case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE)
-			DestroyWindow(hwnd);
+			if (hBack)DeleteObject(hBack);
+		PostQuitMessage(0);
+			//DestroyWindow(hwnd);
 
 	case WM_PAINT:
 	{
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hwnd, &ps);
 
+		if (hBack) {
 
-		FillRect(hdc, &ps.rcPaint, RGB(25,31,99));
+			hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+			HDC hMemDC = CreateCompatibleDC(hdc);
+			SelectObject(hMemDC, hBack);
+
+			BITMAP bmp;
+			GetObject(hBack, sizeof(BITMAP), &bmp);
+
+			BitBlt(hdc, 0, 0, bmp.bmWidth, bmp.bmHeight, hMemDC, 0, 0, SRCCOPY);
+
+			DeleteDC(hMemDC);
+
+		}
+		else {
+
+			FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW +1));
+
+		}
 
 		EndPaint(window.hWnd, &ps);
 
