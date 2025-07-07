@@ -45,5 +45,11 @@
     <Image Include="lesson2D.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="les.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="test.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

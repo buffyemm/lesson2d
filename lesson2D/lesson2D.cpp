@@ -38,7 +38,6 @@ int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int n
 
 	//InitGame();
 
-	int WEIGHT = GetSystemMetrics(SM_CXSCREEN);
 
 	const wchar_t CLASS_NAME[] = L"KAMEN";
 
@@ -87,6 +86,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 	switch (uMsg) {
 
+
+	case WM_CREATE: {
+
+		hBack = (HBITMAP)LoadImageW(NULL, L"les.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+		if (!hBack) MessageBoxW(hwnd, L"Не удалось!", L"ОШИБКА", MB_ICONERROR);
+		break;
+	}
+
 	case WM_SIZE:
 		InitWindow();
 		break;
@@ -98,10 +106,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	}
 
 	case WM_KEYDOWN:
-		if (wParam == VK_ESCAPE)
-			if (hBack)DeleteObject(hBack);
-		PostQuitMessage(0);
-			//DestroyWindow(hwnd);
+		if (wParam == VK_ESCAPE) {
+
+			if (hBack) {
+
+				DeleteObject(hBack);
+				hBack = NULL;
+			}
+
+			DestroyWindow(hwnd);
+
+		}
+		//PostQuitMessage(0);
+		break;
 
 	case WM_PAINT:
 	{
@@ -110,15 +127,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 		if (hBack) {
 
-			hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+			//hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
 			HDC hMemDC = CreateCompatibleDC(hdc);
-			SelectObject(hMemDC, hBack);
+			HBITMAP hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBack);
 
 			BITMAP bmp;
 			GetObject(hBack, sizeof(BITMAP), &bmp);
 
-			BitBlt(hdc, 0, 0, bmp.bmWidth, bmp.bmHeight, hMemDC, 0, 0, SRCCOPY);
+			//BitBlt(hdc, 0, 0, bmp.bmWidth, bmp.bmHeight, hMemDC, 0, 0, SRCCOPY);
+			StretchBlt(hdc, 0, 0, window.width, window.height, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+
+			SelectObject(hMemDC, hOldBitmap);
 
 			DeleteDC(hMemDC);
 
@@ -130,9 +150,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		}
 
 		EndPaint(window.hWnd, &ps);
+		return 0;
 
 	}
-	return 0;
 
 	}
 
