@@ -10,11 +10,40 @@ struct {
 
 	HWND hWnd;
 	int width, height;
-
+	//HDC context, device_context;
 
 }window;
 
-HBITMAP hBack;
+HBITMAP hBack = NULL;
+HBITMAP test = NULL;
+
+
+void ShowBit(HWND hw, int x, int y, int width, int height, HBITMAP name) {
+
+	if (!name)return;
+
+	HDC hdc, hMemDC;
+
+	hdc = GetDC(hw);
+
+	hMemDC = CreateCompatibleDC(hdc); //создаю окно в памяти
+
+	HBITMAP temp = (HBITMAP)SelectObject(hMemDC, name); // помещаем картинку во временный сегмент
+
+	BITMAP bmp;
+
+	GetObject(name, sizeof(HBITMAP), &bmp); // узнаем размер изображения
+
+	StretchBlt(hdc, x, y, width, height, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+
+	SelectObject(hMemDC, temp);
+
+	DeleteDC(hMemDC);
+
+	ReleaseDC(hw, hdc);
+
+
+}
 
 void InitWindow() {
 
@@ -23,6 +52,18 @@ void InitWindow() {
 	window.width = r.right - r.left;
 	window.height = r.bottom - r.top;
 
+
+}
+
+void Cleanup() {
+	if (hBack) {
+		DeleteObject(hBack);
+		hBack = NULL;
+	}
+	if (test) {
+		DeleteObject(test);
+		test = NULL;
+	}
 }
 
 void InitGame() {
@@ -67,7 +108,7 @@ int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int n
 	if (window.hWnd == NULL) return 0;
 
 	InitWindow();
-
+	
 	ShowWindow(window.hWnd, nCmdShow);
 
 	MSG msg = { };
@@ -77,7 +118,7 @@ int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int n
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-
+	Cleanup();
 	return 0;
 }
 
@@ -89,11 +130,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 	case WM_CREATE: {
 
+		test = (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
 		hBack = (HBITMAP)LoadImageW(NULL, L"les.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-		if (!hBack) MessageBoxW(hwnd, L"Не удалось!", L"ОШИБКА", MB_ICONERROR);
+		if (!hBack || !test) MessageBoxW(hwnd, L"Не удалось!", L"ОШИБКА", MB_ICONERROR);
 		break;
 	}
+
+	case WM_LBUTTONDOWN:
+
+		if (test) {
+
+			ShowBit(hwnd,50, 50, 100, 100, test);
+		}
+		break;
 
 	case WM_SIZE:
 		InitWindow();
@@ -108,14 +159,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE) {
 
-			if (hBack) {
+			/*if (hBack) {
 
 				DeleteObject(hBack);
 				hBack = NULL;
-			}
+			}*/
 
 			DestroyWindow(hwnd);
-
+			
 		}
 		//PostQuitMessage(0);
 		break;
@@ -149,7 +200,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 		}
 
-		EndPaint(window.hWnd, &ps);
+		EndPaint(hwnd, &ps);
 		return 0;
 
 	}
@@ -169,8 +220,147 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 
 
-
-
+//#include <windows.h>
+//#include <iostream>
+//
+//struct {
+//	HWND hWnd;
+//	int width, height;
+//} window;
+//
+//HBITMAP hBack = NULL;
+//HBITMAP test = NULL;
+//
+//void ShowBit(HWND hw, int x, int y, int width, int height, HBITMAP name) {
+//	if (!name) return; // Проверка на валидность битмапа
+//
+//	HDC hdc = GetDC(hw);
+//	HDC hMemDC = CreateCompatibleDC(hdc);
+//
+//	HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, name);
+//	BITMAP bmp;
+//	GetObject(name, sizeof(BITMAP), &bmp);
+//
+//	StretchBlt(hdc, x, y, width, height, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+//
+//	SelectObject(hMemDC, hOldBmp);
+//	DeleteDC(hMemDC);
+//	ReleaseDC(hw, hdc);
+//}
+//
+//void InitWindow() {
+//	RECT r;
+//	GetClientRect(window.hWnd, &r);
+//	window.width = r.right - r.left;
+//	window.height = r.bottom - r.top;
+//}
+//
+//void Cleanup() {
+//	if (hBack) DeleteObject(hBack);
+//	if (test) DeleteObject(test);
+//}
+//
+//LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+//
+//int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
+//	const wchar_t CLASS_NAME[] = L"KAMEN";
+//
+//	WNDCLASS wc = { };
+//	wc.lpfnWndProc = WindowProc;
+//	wc.hInstance = hI;
+//	wc.lpszClassName = CLASS_NAME;
+//	RegisterClass(&wc);
+//
+//	window.hWnd = CreateWindowEx(
+//		0,
+//		CLASS_NAME,
+//		L"JOB IS DONE",
+//		WS_POPUP,
+//		CW_USEDEFAULT, CW_USEDEFAULT,
+//		GetSystemMetrics(SM_CXSCREEN),
+//		GetSystemMetrics(SM_CYSCREEN),
+//		NULL,
+//		NULL,
+//		hI,
+//		NULL
+//	);
+//
+//	if (!window.hWnd) return 0;
+//
+//	InitWindow();
+//	ShowWindow(window.hWnd, nCmdShow);
+//
+//	MSG msg = { };
+//	while (GetMessage(&msg, NULL, 0, 0) > 0) {
+//		TranslateMessage(&msg);
+//		DispatchMessage(&msg);
+//	}
+//
+//	Cleanup();
+//	return 0;
+//}
+//
+//LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+//	switch (uMsg) {
+//	case WM_CREATE: {
+//		test = (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+//		hBack = (HBITMAP)LoadImageW(NULL, L"les.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+//
+//		if (!hBack || !test) {
+//			MessageBoxW(hwnd, L"Ошибка загрузки изображений!", L"Ошибка", MB_ICONERROR);
+//		}
+//		break;
+//	}
+//
+//	case WM_LBUTTONDOWN:
+//		if (test) {
+//			ShowBit(hwnd, 50, 50, 100, 100, test);
+//		}
+//		break;
+//
+//	case WM_SIZE:
+//		InitWindow();
+//		break;
+//
+//	case WM_KEYDOWN:
+//		if (wParam == VK_ESCAPE) {
+//			DestroyWindow(hwnd);
+//		}
+//		break;
+//
+//	case WM_DESTROY:
+//		PostQuitMessage(0);
+//		return 0;
+//
+//	case WM_PAINT: {
+//		PAINTSTRUCT ps;
+//		HDC hdc = BeginPaint(hwnd, &ps);
+//
+//		if (hBack) {
+//			HDC hMemDC = CreateCompatibleDC(hdc);
+//			HBITMAP hOld = (HBITMAP)SelectObject(hMemDC, hBack);
+//
+//			BITMAP bmp;
+//			GetObject(hBack, sizeof(BITMAP), &bmp);
+//
+//			StretchBlt(hdc, 0, 0, window.width, window.height,
+//				hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+//
+//			SelectObject(hMemDC, hOld);
+//			DeleteDC(hMemDC);
+//		}
+//		else {
+//			FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
+//		}
+//
+//		EndPaint(hwnd, &ps);
+//		return 0;
+//	}
+//	}
+//
+//	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+//}
+//
 
 
 
