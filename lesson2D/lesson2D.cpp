@@ -94,17 +94,19 @@ void EnemyMove() {
 
 }
 
+
+
 void ProcesImput() {
 
 	float gravity = 30;
 	float jump = 0;
 	if (GetAsyncKeyState(VK_LEFT)) enemy.x -= enemy.speed;
 	if (GetAsyncKeyState(VK_RIGHT)) enemy.x += enemy.speed;
-	if (GetAsyncKeyState(VK_UP))  jump = 70;
+	if (GetAsyncKeyState(VK_SPACE))  jump = 90;
 
-	jump *= 0.9;
+	jump *= .9;
 	enemy.y += gravity - jump;
-	enemy.y = max(enemy.y - enemy.h , window.height - enemy.height);
+	enemy.y = min((enemy.y), (window.height - enemy.height));
 
 
 
@@ -250,7 +252,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW +1));
 
 		}
-			ShowBit(hwnd,enemy.x, enemy.y, 100, 100, test);
+			ShowBit(hwnd,enemy.x, enemy.y, enemy.width, enemy.height, test);
 
 		EndPaint(hwnd, &ps);
 		return 0;
