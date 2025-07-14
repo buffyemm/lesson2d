@@ -6,6 +6,13 @@
 #include<windows.h>
 #include <iostream>
 
+
+struct sprite {
+	float x, y, width, height, speed;
+};
+
+sprite enemy;
+
 struct {
 
 	HWND hWnd;
@@ -22,28 +29,21 @@ void ShowBit(HWND hw, int x, int y, int width, int height, HBITMAP name) {
 
 	if (!name)return;
 
-	HDC hdc, hMemDC;
-
-	hdc = GetDC(hw);
-
-	hMemDC = CreateCompatibleDC(hdc); //создаю окно в памяти
+	HDC hdc = GetDC(hw);
+	HDC hMemDC = CreateCompatibleDC(hdc); //создаю окно в памяти
 
 	HBITMAP temp = (HBITMAP)SelectObject(hMemDC, name); // помещаем картинку во временный сегмент
-
 	BITMAP bmp;
-
-	GetObject(name, sizeof(HBITMAP), &bmp); // узнаем размер изображения
+	GetObject(name, sizeof(BITMAP), &bmp); // узнаем размер изображения
 
 	StretchBlt(hdc, x, y, width, height, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
 
 	SelectObject(hMemDC, temp);
-
 	DeleteDC(hMemDC);
-
 	ReleaseDC(hw, hdc);
-
-
 }
+
+
 
 void InitWindow() {
 
@@ -68,7 +68,44 @@ void Cleanup() {
 
 void InitGame() {
 
-	hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	//hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+	enemy.x = 0;
+	enemy.y = window.height / 2;
+	enemy.height = 30;
+	enemy.width = 30;
+	enemy.speed = 30;
+
+}
+
+void EnemyMove() {
+	bool temp = true;
+
+	if (enemy.x + enemy.width >= (window.width - enemy.width) && temp ) {
+
+		enemy.x -= enemy.speed;
+		temp = false;
+	}
+	else {
+
+	enemy.x += enemy.speed;
+	}
+
+
+}
+
+void ProcesImput() {
+
+	float gravity = 30;
+	float jump = 0;
+	if (GetAsyncKeyState(VK_LEFT)) enemy.x -= enemy.speed;
+	if (GetAsyncKeyState(VK_RIGHT)) enemy.x += enemy.speed;
+	if (GetAsyncKeyState(VK_UP))  jump = 70;
+
+	jump *= 0.9;
+	enemy.y += gravity - jump;
+	enemy.y = max(enemy.y - enemy.h , window.height - enemy.height);
+
 
 
 }
@@ -108,8 +145,11 @@ int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int n
 	if (window.hWnd == NULL) return 0;
 
 	InitWindow();
-	
+	InitGame();
+
 	ShowWindow(window.hWnd, nCmdShow);
+
+	SetTimer(window.hWnd, 1, 16, NULL);
 
 	MSG msg = { };
 
@@ -130,20 +170,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 	case WM_CREATE: {
 
+
 		test = (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
 		hBack = (HBITMAP)LoadImageW(NULL, L"les.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+		//InitGame();
 
 		if (!hBack || !test) MessageBoxW(hwnd, L"Не удалось!", L"ОШИБКА", MB_ICONERROR);
 		break;
 	}
 
+	case WM_TIMER:
+
+		ProcesImput();
+		//EnemyMove();
+		InvalidateRect(hwnd, NULL, FALSE);
+
+
 	case WM_LBUTTONDOWN:
 
 		if (test) {
 
-			ShowBit(hwnd,50, 50, 100, 100, test);
 		}
+
+
 		break;
 
 	case WM_SIZE:
@@ -153,6 +204,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	case WM_DESTROY: {
 
 		PostQuitMessage(0);
+		KillTimer(hwnd, 1);
 		return 0;
 	}
 
@@ -178,7 +230,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 		if (hBack) {
 
-			//hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
 			HDC hMemDC = CreateCompatibleDC(hdc);
 			HBITMAP hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBack);
@@ -199,6 +250,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW +1));
 
 		}
+			ShowBit(hwnd,enemy.x, enemy.y, 100, 100, test);
 
 		EndPaint(hwnd, &ps);
 		return 0;
@@ -232,6 +284,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 //HBITMAP test = NULL;
 //
 //void ShowBit(HWND hw, int x, int y, int width, int height, HBITMAP name) {
+//
 //	if (!name) return; // Проверка на валидность битмапа
 //
 //	HDC hdc = GetDC(hw);
