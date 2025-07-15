@@ -9,9 +9,10 @@
 
 struct sprite {
 	float x, y, width, height, speed;
+	bool inJump = false;
 };
 
-sprite enemy;
+sprite hero;
 
 struct {
 
@@ -70,25 +71,25 @@ void InitGame() {
 
 	//hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-	enemy.x = 0;
-	enemy.y = window.height / 2;
-	enemy.height = 30;
-	enemy.width = 30;
-	enemy.speed = 30;
+	hero.x = 0;
+	hero.y = window.height / 2;
+	hero.height = 30;
+	hero.width = 30;
+	hero.speed = 30;
 
 }
 
 void EnemyMove() {
 	bool temp = true;
 
-	if (enemy.x + enemy.width >= (window.width - enemy.width) && temp ) {
+	if (hero.x + hero.width >= (window.width - hero.width) && temp ) {
 
-		enemy.x -= enemy.speed;
+		hero.x -= hero.speed;
 		temp = false;
 	}
 	else {
 
-	enemy.x += enemy.speed;
+	hero.x += hero.speed;
 	}
 
 
@@ -96,21 +97,50 @@ void EnemyMove() {
 
 
 
+	float jump = 0;
+
 void ProcesImput() {
 
+	
+
 	float gravity = 30;
-	float jump = 0;
-	if (GetAsyncKeyState(VK_LEFT)) enemy.x -= enemy.speed;
-	if (GetAsyncKeyState(VK_RIGHT)) enemy.x += enemy.speed;
-	if (GetAsyncKeyState(VK_SPACE))  jump = 90;
+	if (GetAsyncKeyState(VK_LEFT)) hero.x -= hero.speed;
+	if (GetAsyncKeyState(VK_RIGHT)) hero.x += hero.speed;
+	if (GetAsyncKeyState(VK_SPACE) && !hero.inJump) {
 
+		jump = 90;
+		hero.inJump = true;
+
+	}
+
+	hero.y += gravity - jump;
 	jump *= .9;
-	enemy.y += gravity - jump;
-	enemy.y = min((enemy.y), (window.height - enemy.height));
+	hero.y = min((hero.y), (window.height - hero.height));
 
+	if(hero.y + hero.height >= window.height)
+	hero.inJump = false;
 
 
 }
+
+
+void Proces_room() {
+
+	if (hero.x <= window.width - window.width)
+		hero.x = 0;
+
+	if (hero.x >= window.width - hero.width)
+		hero.x = window.width - hero.width;
+	
+		
+		
+		//если коодината левого угла ракетки меньше нуля, присвоим ей ноль
+	//аналогично для правого угла
+
+
+}
+
+
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -184,10 +214,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	}
 
 	case WM_TIMER:
-
-		ProcesImput();
-		//EnemyMove();
+		
 		InvalidateRect(hwnd, NULL, FALSE);
+		ProcesImput();
+		Proces_room();
+		//EnemyMove();
 
 
 	case WM_LBUTTONDOWN:
@@ -252,7 +283,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW +1));
 
 		}
-			ShowBit(hwnd,enemy.x, enemy.y, enemy.width, enemy.height, test);
+			ShowBit(hwnd,hero.x, hero.y, hero.width, hero.height, test);
 
 		EndPaint(hwnd, &ps);
 		return 0;
