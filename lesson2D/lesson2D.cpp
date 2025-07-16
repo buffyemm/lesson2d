@@ -37,7 +37,10 @@ void ShowBit(HWND hw, int x, int y, int width, int height, HBITMAP name) {
 	BITMAP bmp;
 	GetObject(name, sizeof(BITMAP), &bmp); // узнаем размер изображения
 
+	
+
 	StretchBlt(hdc, x, y, width, height, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+	
 
 	SelectObject(hMemDC, temp);
 	DeleteDC(hMemDC);
@@ -73,8 +76,8 @@ void InitGame() {
 
 	hero.x = 0;
 	hero.y = window.height / 2;
-	hero.height = 30;
-	hero.width = 30;
+	hero.height = 50;
+	hero.width = 50;
 	hero.speed = 30;
 
 }
