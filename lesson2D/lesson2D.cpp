@@ -5,14 +5,13 @@
 
 #include<windows.h>
 #include <iostream>
-
+#include <vector>
 
 struct sprite {
 	float x, y, width, height, speed;
 	bool inJump = false;
 };
 
-sprite hero;
 
 struct {
 
@@ -22,6 +21,16 @@ struct {
 
 }window;
 
+struct Platform {
+
+	sprite pl;
+	HBITMAP picture;
+
+};
+
+
+std::vector<Platform> platform;
+sprite hero;
 HBITMAP hBack = NULL;
 HBITMAP test = NULL;
 
@@ -60,6 +69,12 @@ void InitWindow() {
 }
 
 void Cleanup() {
+
+	if (platform[0].picture) {
+		DeleteObject(platform[0].picture);
+		platform[0].picture = NULL;
+	}
+
 	if (hBack) {
 		DeleteObject(hBack);
 		hBack = NULL;
@@ -79,7 +94,7 @@ void InitGame() {
 	hero.height = 50;
 	hero.width = 50;
 	hero.speed = 30;
-
+	platform.push_back({ {500,  1200, 600, 100, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 }
 
 void EnemyMove() {
@@ -140,6 +155,58 @@ void Proces_room() {
 		//если коодината левого угла ракетки меньше нуля, присвоим ей ноль
 	//аналогично для правого угла
 
+
+}
+
+void collise() {
+	for (auto p : platform) {
+
+		if (hero.x + hero.width >= p.pl.x && hero.x <= p.pl.x + p.pl.width &&
+			hero.y < p.pl.y + p.pl.height && hero.y + hero.height > p.pl.y) {
+
+
+			float UP = abs(p.pl.y - (hero.y + hero.height));
+			float DOWN = abs((p.pl.y + p.pl.height) - hero.y);
+
+			//float RIGHT = ();
+			int over_Y = min(UP, DOWN);
+
+			float LEFT = abs(p.pl.x - (hero.x + hero.width));
+			float RIGHT = abs(p.pl.x + p.pl.width - hero.x);
+			float over_X = min(LEFT, RIGHT);
+
+			if (over_X < over_Y)
+			{
+				if (LEFT < RIGHT)
+				{
+					hero.x = p.pl.x - hero.width;
+				}
+				else
+				{
+					hero.x = p.pl.x + p.pl.width;
+				}
+			}
+			else {
+
+				if (UP < DOWN)
+				{
+					hero.y = p.pl.y - hero.height;
+					//isJumping = false;
+				}
+				else
+				{
+					hero.y = p.pl.y + p.pl.height;
+				}
+			}
+
+
+
+
+		}
+
+
+
+	}
 
 }
 
@@ -221,6 +288,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		InvalidateRect(hwnd, NULL, FALSE);
 		ProcesImput();
 		Proces_room();
+		collise();
 		//EnemyMove();
 
 
@@ -286,6 +354,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW +1));
 
 		}
+			
+			ShowBit(hwnd, platform[0].pl.x, platform[0].pl.y, platform[0].pl.width, platform[0].pl.height, platform[0].picture);
 			ShowBit(hwnd,hero.x, hero.y, hero.width, hero.height, test);
 
 		EndPaint(hwnd, &ps);
