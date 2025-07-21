@@ -191,7 +191,7 @@ void collise() {
 				if (UP < DOWN)
 				{
 					hero.y = p.pl.y - hero.height;
-					//isJumping = false;
+					hero.inJump = false;
 				}
 				else
 				{
