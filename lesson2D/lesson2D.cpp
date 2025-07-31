@@ -94,7 +94,7 @@ void InitGame() {
 	hero.height = 50;
 	hero.width = 50;
 	hero.speed = 30;
-	platform.push_back({ {500,  1200, 600, 100, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
+	platform.push_back({ {100,  700, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 }
 
 void EnemyMove() {
@@ -151,14 +151,12 @@ void Proces_room() {
 		hero.x = window.width - hero.width;
 	
 		
-		
-		//если коодината левого угла ракетки меньше нуля, присвоим ей ноль
-	//аналогично для правого угла
 
 
 }
 
 void collise() {
+
 	for (auto p : platform) {
 
 		if (hero.x + hero.width >= p.pl.x && hero.x <= p.pl.x + p.pl.width &&
@@ -209,6 +207,16 @@ void collise() {
 	}
 
 }
+		auto DrawBitmap = [](HDC hdcDest, int x, int y, int w, int h, HBITMAP hBmp) {
+			if (!hBmp) return;
+			HDC hMemDC = CreateCompatibleDC(hdcDest);
+			HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, hBmp);
+			BITMAP bmp;
+			GetObject(hBmp, sizeof(BITMAP), &bmp);
+			StretchBlt(hdcDest, x, y, w, h, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+			SelectObject(hMemDC, hOldBmp);
+			DeleteDC(hMemDC);
+			};
 
 
 
@@ -216,7 +224,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
 
-	//InitGame();
+	InitGame();
 
 
 	const wchar_t CLASS_NAME[] = L"KAMEN";
@@ -247,7 +255,7 @@ int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int n
 	if (window.hWnd == NULL) return 0;
 
 	InitWindow();
-	InitGame();
+	//InitGame();
 
 	ShowWindow(window.hWnd, nCmdShow);
 
@@ -284,7 +292,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	}
 
 	case WM_TIMER:
-		
+
 		InvalidateRect(hwnd, NULL, FALSE);
 		ProcesImput();
 		Proces_room();
@@ -322,49 +330,51 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			}*/
 
 			DestroyWindow(hwnd);
-			
+
 		}
 		//PostQuitMessage(0);
 		break;
 
-	case WM_PAINT:
-	{
+	case WM_PAINT: {
+
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hwnd, &ps);
 
+		// 1. Создаём буфер в памяти
+		HDC hMemDC = CreateCompatibleDC(hdc);
+		HBITMAP hMemBmp = CreateCompatibleBitmap(hdc, window.width, window.height);
+		HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, hMemBmp);
+
+		// 2. Рисуем ВСЁ в буфер
+		// --- Фон ---
 		if (hBack) {
-
-
-			HDC hMemDC = CreateCompatibleDC(hdc);
-			HBITMAP hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBack);
-
+			HDC hBackDC = CreateCompatibleDC(hMemDC);
+			HBITMAP hOldBackBmp = (HBITMAP)SelectObject(hBackDC, hBack);
 			BITMAP bmp;
 			GetObject(hBack, sizeof(BITMAP), &bmp);
-
-			//BitBlt(hdc, 0, 0, bmp.bmWidth, bmp.bmHeight, hMemDC, 0, 0, SRCCOPY);
-			StretchBlt(hdc, 0, 0, window.width, window.height, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
-
-			SelectObject(hMemDC, hOldBitmap);
-
-			DeleteDC(hMemDC);
-
+			StretchBlt(hMemDC, 0, 0, window.width, window.height, hBackDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+			SelectObject(hBackDC, hOldBackBmp);
+			DeleteDC(hBackDC);
 		}
-		else {
 
-			FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW +1));
+		// --- Платформа и герой ---
+		// Модифицируем ShowBit для работы с любым HDC (не только экранным)
 
-		}
-			
-			ShowBit(hwnd, platform[0].pl.x, platform[0].pl.y, platform[0].pl.width, platform[0].pl.height, platform[0].picture);
-			ShowBit(hwnd,hero.x, hero.y, hero.width, hero.height, test);
+		DrawBitmap(hMemDC, platform[0].pl.x, platform[0].pl.y, platform[0].pl.width, platform[0].pl.height, platform[0].picture);
+		DrawBitmap(hMemDC, hero.x, hero.y, hero.width, hero.height, test);
 
+		// 3. Копируем готовый буфер на экран
+		BitBlt(hdc, 0, 0, window.width, window.height, hMemDC, 0, 0, SRCCOPY);
+
+		// 4. Очистка
+		SelectObject(hMemDC, hOldBmp);
+		DeleteObject(hMemBmp);
+		DeleteDC(hMemDC);
 		EndPaint(hwnd, &ps);
-		return 0;
-
+		break;
 	}
 
 	}
-
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
