@@ -30,7 +30,10 @@ struct Platform {
 
 
 std::vector<Platform> platform;
+std::vector<Platform> item;
+
 sprite hero;
+sprite enemy;
 HBITMAP hBack = NULL;
 HBITMAP test = NULL;
 
@@ -89,27 +92,41 @@ void InitGame() {
 
 	//hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-	hero.x = 0;
+	hero.x = window.width - hero.width * 2;
 	hero.y = window.height / 2;
 	hero.height = 50;
 	hero.width = 50;
 	hero.speed = 30;
+	enemy.width = 30;
+	enemy.height = 30;
+	enemy.speed = 30;
+	enemy.x = window.width / 2;
+	enemy.y = window.height - enemy.height;
+
+	item.push_back({ {100,  100, 30, 30, 0}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 	platform.push_back({ {100,  700, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 }
 
 void EnemyMove() {
-	bool temp = true;
 
-	if (hero.x + hero.width >= (window.width - hero.width) && temp ) {
+	float dist = 500;
 
-		hero.x -= hero.speed;
-		temp = false;
+
+	float distToHero = abs(enemy.x - hero.x);
+
+
+	if (distToHero < dist) {
+
+		if (enemy.x < hero.x) { // right enemy
+
+			enemy.x += 10;
+		}
+		else {
+
+			enemy.x -= 10;
+
+		}
 	}
-	else {
-
-	hero.x += hero.speed;
-	}
-
 
 }
 
@@ -207,16 +224,25 @@ void collise() {
 	}
 
 }
-		auto DrawBitmap = [](HDC hdcDest, int x, int y, int w, int h, HBITMAP hBmp) {
-			if (!hBmp) return;
-			HDC hMemDC = CreateCompatibleDC(hdcDest);
-			HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, hBmp);
-			BITMAP bmp;
-			GetObject(hBmp, sizeof(BITMAP), &bmp);
-			StretchBlt(hdcDest, x, y, w, h, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
-			SelectObject(hMemDC, hOldBmp);
-			DeleteDC(hMemDC);
-			};
+		
+
+auto DrawBitmap = [](HDC hdcDest, int x, int y, int w, int h, HBITMAP hBmp, bool transparent) {
+	if (!hBmp) return;
+	HDC hMemDC = CreateCompatibleDC(hdcDest);
+	HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, hBmp);
+	BITMAP bmp;
+	GetObject(hBmp, sizeof(BITMAP), &bmp);
+	if (transparent) {
+
+		//TransparentBlt(hdcDest, x, y, w, h, hMemDC, 0, 0, w, h, RGB(0, 0, 0));
+	}
+	else {
+
+	StretchBlt(hdcDest, x, y, w, h, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+	}
+	SelectObject(hMemDC, hOldBmp);
+	DeleteDC(hMemDC);
+	};
 
 
 
@@ -224,7 +250,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
 
-	InitGame();
+	//InitGame();
 
 
 	const wchar_t CLASS_NAME[] = L"KAMEN";
@@ -255,7 +281,7 @@ int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int n
 	if (window.hWnd == NULL) return 0;
 
 	InitWindow();
-	//InitGame();
+	InitGame();
 
 	ShowWindow(window.hWnd, nCmdShow);
 
@@ -297,7 +323,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		ProcesImput();
 		Proces_room();
 		collise();
-		//EnemyMove();
+		EnemyMove();
 
 
 	case WM_LBUTTONDOWN:
@@ -358,10 +384,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		}
 
 		// --- Платформа и герой ---
-		// Модифицируем ShowBit для работы с любым HDC (не только экранным)
 
-		DrawBitmap(hMemDC, platform[0].pl.x, platform[0].pl.y, platform[0].pl.width, platform[0].pl.height, platform[0].picture);
-		DrawBitmap(hMemDC, hero.x, hero.y, hero.width, hero.height, test);
+		DrawBitmap(hMemDC, platform[0].pl.x, platform[0].pl.y, platform[0].pl.width, platform[0].pl.height, platform[0].picture, true);
+		DrawBitmap(hMemDC, hero.x, hero.y, hero.width, hero.height, test, true);
+		DrawBitmap(hMemDC, enemy.x, enemy.y, enemy.width, enemy.height, hBack, false);
+		DrawBitmap(hMemDC, item[0].pl.x, item[0].pl.y, item[0].pl.width, item[0].pl.height, item[0].picture, true);
+
 
 		// 3. Копируем готовый буфер на экран
 		BitBlt(hdc, 0, 0, window.width, window.height, hMemDC, 0, 0, SRCCOPY);
