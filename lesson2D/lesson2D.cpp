@@ -3,6 +3,7 @@
 //
 //}
 
+#pragma comment(lib, "Msimg32.lib")
 #include<windows.h>
 #include <iostream>
 #include <vector>
@@ -92,8 +93,8 @@ void InitGame() {
 
 	//hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-	hero.x = window.width - hero.width * 2;
-	hero.y = window.height / 2;
+	hero.x = 10;
+	hero.y = 10;
 	hero.height = 50;
 	hero.width = 50;
 	hero.speed = 30;
@@ -103,7 +104,7 @@ void InitGame() {
 	enemy.x = window.width / 2;
 	enemy.y = window.height - enemy.height;
 
-	item.push_back({ {100,  100, 30, 30, 0}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
+	item.push_back({ {100,  1300, 70, 70, 0}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 	platform.push_back({ {100,  700, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 }
 
@@ -234,7 +235,7 @@ auto DrawBitmap = [](HDC hdcDest, int x, int y, int w, int h, HBITMAP hBmp, bool
 	GetObject(hBmp, sizeof(BITMAP), &bmp);
 	if (transparent) {
 
-		//TransparentBlt(hdcDest, x, y, w, h, hMemDC, 0, 0, w, h, RGB(0, 0, 0));
+		TransparentBlt(hdcDest, x, y, w, h, hMemDC, 0, 0, w, h, RGB(0, 0, 0));
 	}
 	else {
 
@@ -244,6 +245,22 @@ auto DrawBitmap = [](HDC hdcDest, int x, int y, int w, int h, HBITMAP hBmp, bool
 	DeleteDC(hMemDC);
 	};
 
+
+//void Colise_item() {
+//
+//	for (int i = 0; i < item.size();i++) {
+//
+//		auto plat = item[i].pl;
+//
+//		if (hero.x + hero.width > plat.x &&
+//			hero.x < plat.x + plat.width) {
+//
+//			item.emplace_back(item.cbegin() + i);
+//
+//		}
+//	}
+//
+//}
 
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -324,7 +341,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		Proces_room();
 		collise();
 		EnemyMove();
-
+		//Colise_item();
 
 	case WM_LBUTTONDOWN:
 
@@ -385,10 +402,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 		// --- Платформа и герой ---
 
-		DrawBitmap(hMemDC, platform[0].pl.x, platform[0].pl.y, platform[0].pl.width, platform[0].pl.height, platform[0].picture, true);
+		DrawBitmap(hMemDC, platform[0].pl.x, platform[0].pl.y, platform[0].pl.width, platform[0].pl.height, platform[0].picture, false);
 		DrawBitmap(hMemDC, hero.x, hero.y, hero.width, hero.height, test, true);
 		DrawBitmap(hMemDC, enemy.x, enemy.y, enemy.width, enemy.height, hBack, false);
-		DrawBitmap(hMemDC, item[0].pl.x, item[0].pl.y, item[0].pl.width, item[0].pl.height, item[0].picture, true);
+		DrawBitmap(hMemDC, item[0].pl.x, item[0].pl.y, item[0].pl.width, item[0].pl.height, item[0].picture, false);
 
 
 		// 3. Копируем готовый буфер на экран
