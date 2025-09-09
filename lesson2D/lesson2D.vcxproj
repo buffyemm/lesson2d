@@ -144,6 +144,7 @@
     <Image Include="hero.bmp" />
     <Image Include="les.bmp" />
     <Image Include="lesson2D.ico" />
+    <Image Include="need.bmp" />
     <Image Include="small.ico" />
     <Image Include="test.bmp" />
   </ItemGroup>
