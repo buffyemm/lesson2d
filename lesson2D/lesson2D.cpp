@@ -4,9 +4,11 @@
 //}
 
 #pragma comment(lib, "Msimg32.lib")
+#pragma comment(lib, "winmm.lib")
 #include<windows.h>
 #include <iostream>
 #include <vector>
+
 
 struct sprite {
 	float x, y, width, height, speed;
@@ -29,36 +31,46 @@ struct Platform {
 
 };
 
+struct {
+
+sprite model;
+std::vector<HBITMAP> anim;
+int currentFrame = anim.size() - anim.size();
+int lastFrame = 0;
+}hero;
+
 
 std::vector<Platform> platform;
 std::vector<Platform> item;
 
-sprite hero;
 sprite enemy;
 HBITMAP hBack = NULL;
 HBITMAP test = NULL;
 
+DWORD currentTime = timeGetTime();
+DWORD LastTime = 0;
 
-void ShowBit(HWND hw, int x, int y, int width, int height, HBITMAP name) {
 
-	if (!name)return;
-
-	HDC hdc = GetDC(hw);
-	HDC hMemDC = CreateCompatibleDC(hdc); //создаю окно в памяти
-
-	HBITMAP temp = (HBITMAP)SelectObject(hMemDC, name); // помещаем картинку во временный сегмент
-	BITMAP bmp;
-	GetObject(name, sizeof(BITMAP), &bmp); // узнаем размер изображения
-
-	
-
-	StretchBlt(hdc, x, y, width, height, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
-	
-
-	SelectObject(hMemDC, temp);
-	DeleteDC(hMemDC);
-	ReleaseDC(hw, hdc);
-}
+//void ShowBit(HWND hw, int x, int y, int width, int height, HBITMAP name) {
+//
+//	if (!name)return;
+//
+//	HDC hdc = GetDC(hw);
+//	HDC hMemDC = CreateCompatibleDC(hdc); //создаю окно в памяти
+//
+//	HBITMAP temp = (HBITMAP)SelectObject(hMemDC, name); // помещаем картинку во временный сегмент
+//	BITMAP bmp;
+//	GetObject(name, sizeof(BITMAP), &bmp); // узнаем размер изображения
+//
+//	
+//
+//	StretchBlt(hdc, x, y, width, height, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+//	
+//
+//	SelectObject(hMemDC, temp);
+//	DeleteDC(hMemDC);
+//	ReleaseDC(hw, hdc);
+//}
 
 
 
@@ -93,16 +105,22 @@ void InitGame() {
 
 	//hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-	hero.x = 10;
-	hero.y = 10;
-	hero.height = 50;
-	hero.width = 50;
-	hero.speed = 30;
+	hero.model.x = 10;
+	hero.model.y = 10;
+	hero.model.height = 148;
+	hero.model.width = 110;
+	hero.model.speed = 30;
 	enemy.width = 30;
 	enemy.height = 30;
 	enemy.speed = 30;
 	enemy.x = window.width / 2;
 	enemy.y = window.height - enemy.height;
+
+	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"hero.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"h.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"h1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+
+
 
 	item.push_back({ {100,  1300, 70, 70, 0}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 	platform.push_back({ {100,  700, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
@@ -113,12 +131,12 @@ void EnemyMove() {
 	float dist = 500;
 
 
-	float distToHero = abs(enemy.x - hero.x);
+	float distToHero = abs(enemy.x - hero.model.x);
 
 
 	if (distToHero < dist) {
 
-		if (enemy.x < hero.x) { // right enemy
+		if (enemy.x < hero.model.x) { // right enemy
 
 			enemy.x += 10;
 		}
@@ -140,21 +158,21 @@ void ProcesImput() {
 	
 
 	float gravity = 30;
-	if (GetAsyncKeyState(VK_LEFT)) hero.x -= hero.speed;
-	if (GetAsyncKeyState(VK_RIGHT)) hero.x += hero.speed;
-	if (GetAsyncKeyState(VK_SPACE) && !hero.inJump) {
+	if (GetAsyncKeyState(VK_LEFT)) hero.model.x -= hero.model.speed;
+	if (GetAsyncKeyState(VK_RIGHT)) hero.model.x += hero.model.speed;
+	if (GetAsyncKeyState(VK_SPACE) && !hero.model.inJump) {
 
 		jump = 90;
-		hero.inJump = true;
+		hero.model.inJump = true;
 
 	}
 
-	hero.y += gravity - jump;
+	hero.model.y += gravity - jump;
 	jump *= .9;
-	hero.y = min((hero.y), (window.height - hero.height));
+	hero.model.y = min((hero.model.y), (window.height - hero.model.height));
 
-	if(hero.y + hero.height >= window.height)
-	hero.inJump = false;
+	if(hero.model.y + hero.model.height >= window.height)
+	hero.model.inJump = false;
 
 
 }
@@ -162,11 +180,11 @@ void ProcesImput() {
 
 void Proces_room() {
 
-	if (hero.x <= window.width - window.width)
-		hero.x = 0;
+	if (hero.model.x <= window.width - window.width)
+		hero.model.x = 0;
 
-	if (hero.x >= window.width - hero.width)
-		hero.x = window.width - hero.width;
+	if (hero.model.x >= window.width - hero.model.width)
+		hero.model.x = window.width - hero.model.width;
 	
 		
 
@@ -177,41 +195,41 @@ void collise() {
 
 	for (auto p : platform) {
 
-		if (hero.x + hero.width >= p.pl.x && hero.x <= p.pl.x + p.pl.width &&
-			hero.y < p.pl.y + p.pl.height && hero.y + hero.height > p.pl.y) {
+		if (hero.model.x + hero.model.width >= p.pl.x && hero.model.x <= p.pl.x + p.pl.width &&
+			hero.model.y < p.pl.y + p.pl.height && hero.model.y + hero.model.height > p.pl.y) {
 
 
-			float UP = abs(p.pl.y - (hero.y + hero.height));
-			float DOWN = abs((p.pl.y + p.pl.height) - hero.y);
+			float UP = abs(p.pl.y - (hero.model.y + hero.model.height));
+			float DOWN = abs((p.pl.y + p.pl.height) - hero.model.y);
 
 			//float RIGHT = ();
 			int over_Y = min(UP, DOWN);
 
-			float LEFT = abs(p.pl.x - (hero.x + hero.width));
-			float RIGHT = abs(p.pl.x + p.pl.width - hero.x);
+			float LEFT = abs(p.pl.x - (hero.model.x + hero.model.width));
+			float RIGHT = abs(p.pl.x + p.pl.width - hero.model.x);
 			float over_X = min(LEFT, RIGHT);
 
 			if (over_X < over_Y)
 			{
 				if (LEFT < RIGHT)
 				{
-					hero.x = p.pl.x - hero.width;
+					hero.model.x = p.pl.x - hero.model.width;
 				}
 				else
 				{
-					hero.x = p.pl.x + p.pl.width;
+					hero.model.x = p.pl.x + p.pl.width;
 				}
 			}
 			else {
 
 				if (UP < DOWN)
 				{
-					hero.y = p.pl.y - hero.height;
-					hero.inJump = false;
+					hero.model.y = p.pl.y - hero.model.height;
+					hero.model.inJump = false;
 				}
 				else
 				{
-					hero.y = p.pl.y + p.pl.height;
+					hero.model.y = p.pl.y + p.pl.height;
 				}
 			}
 
@@ -233,6 +251,7 @@ auto DrawBitmap = [](HDC hdcDest, int x, int y, int w, int h, HBITMAP hBmp, bool
 	HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, hBmp);
 	BITMAP bmp;
 	GetObject(hBmp, sizeof(BITMAP), &bmp);
+
 	if (transparent) {
 
 		TransparentBlt(hdcDest, x, y, w, h, hMemDC, 0, 0, w, h, RGB(0, 0, 0));
@@ -245,6 +264,21 @@ auto DrawBitmap = [](HDC hdcDest, int x, int y, int w, int h, HBITMAP hBmp, bool
 	DeleteDC(hMemDC);
 	};
 
+
+bool AnimTime() {
+
+	//DWORD t = timeGetTime();
+	
+	static DWORD lasttime;
+
+	if (currentTime - lasttime > 500) {
+
+		LastTime = currentTime;
+		return true;
+	}
+
+	return false;
+}
 
 //void Colise_item() {
 //
@@ -324,7 +358,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	case WM_CREATE: {
 
 
-		test = (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+		test = (HBITMAP)LoadImageW(NULL, L"h.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
 		hBack = (HBITMAP)LoadImageW(NULL, L"les.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
@@ -337,6 +371,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	case WM_TIMER:
 
 		InvalidateRect(hwnd, NULL, FALSE);
+
 		ProcesImput();
 		Proces_room();
 		collise();
@@ -403,9 +438,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		// --- Платформа и герой ---
 
 		DrawBitmap(hMemDC, platform[0].pl.x, platform[0].pl.y, platform[0].pl.width, platform[0].pl.height, platform[0].picture, false);
-		DrawBitmap(hMemDC, hero.x, hero.y, hero.width, hero.height, test, true);
+
+		if (!hero.anim.empty() && hero.currentFrame < hero.anim.size()) {
+			DrawBitmap(hMemDC, hero.model.x, hero.model.y, hero.model.width, hero.model.height,
+				hero.anim[hero.currentFrame], false);
+		}
+
+		// Обновляем кадр анимации по таймеру
+		if (AnimTime()) {
+			hero.currentFrame++;
+			if (hero.currentFrame >= hero.anim.size()) {
+				hero.currentFrame = 0; // Зацикливаем анимацию
+			}
+		}
+
+		//}
 		DrawBitmap(hMemDC, enemy.x, enemy.y, enemy.width, enemy.height, hBack, false);
-		DrawBitmap(hMemDC, item[0].pl.x, item[0].pl.y, item[0].pl.width, item[0].pl.height, item[0].picture, false);
+		DrawBitmap(hMemDC, item[0].pl.x, item[0].pl.y, item[0].pl.width, item[0].pl.height, item[0].picture, true);
 
 
 		// 3. Копируем готовый буфер на экран
