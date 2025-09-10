@@ -139,13 +139,22 @@
     <ResourceCompile Include="lesson2D.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="A0.bmp" />
+    <Image Include="A1.bmp" />
+    <Image Include="A2.bmp" />
+    <Image Include="A3.bmp" />
+    <Image Include="A4.bmp" />
+    <Image Include="A5.bmp" />
+    <Image Include="axe.bmp" />
     <Image Include="h.bmp" />
     <Image Include="h1.bmp" />
+    <Image Include="hemlet.bmp" />
     <Image Include="hero.bmp" />
     <Image Include="les.bmp" />
     <Image Include="lesson2D.ico" />
     <Image Include="need.bmp" />
     <Image Include="small.ico" />
+    <Image Include="sword.bmp" />
     <Image Include="test.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

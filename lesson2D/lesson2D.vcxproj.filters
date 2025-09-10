@@ -63,5 +63,32 @@
     <Image Include="need.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="A1.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="A2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="A3.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="A4.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="A5.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="A0.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="axe.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="sword.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="hemlet.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

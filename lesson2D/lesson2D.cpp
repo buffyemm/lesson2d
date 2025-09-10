@@ -10,6 +10,15 @@
 #include <vector>
 
 
+enum class item_{
+
+	Sword,
+	Axe, 
+	Hemlet
+
+};
+
+
 struct sprite {
 	float x, y, width, height, speed;
 	bool inJump = false;
@@ -24,26 +33,33 @@ struct {
 
 }window;
 
-struct Platform {
+struct object_ {
 
 	sprite pl;
 	HBITMAP picture;
 
 };
 
-struct {
+struct Character {
 
 sprite model;
 std::vector<HBITMAP> anim;
+std::vector<object_> item;
+
 int currentFrame = anim.size() - anim.size();
 int lastFrame = 0;
-}hero;
+bool activ = false;
 
 
-std::vector<Platform> platform;
-std::vector<Platform> item;
 
-sprite enemy;
+};
+
+
+std::vector<object_> platform;
+std::vector<object_> item;
+
+Character hero;
+Character enemy;
 HBITMAP hBack = NULL;
 HBITMAP test = NULL;
 
@@ -107,22 +123,37 @@ void InitGame() {
 
 	hero.model.x = 10;
 	hero.model.y = 10;
-	hero.model.height = 148;
-	hero.model.width = 110;
+	hero.model.height = 150;
+	hero.model.width = 100;
 	hero.model.speed = 30;
-	enemy.width = 30;
-	enemy.height = 30;
-	enemy.speed = 30;
-	enemy.x = window.width / 2;
-	enemy.y = window.height - enemy.height;
+	enemy.model.height = 150;
+	enemy.model.width = 100;
+	enemy.model.speed = 30;
+	enemy.model.x = window.width / 2;
+	enemy.model.y = window.height - enemy.model.height;
 
-	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"hero.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"h.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"h1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+
+
+	enemy.anim.push_back((HBITMAP)LoadImageW(NULL, L"E0.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	enemy.anim.push_back((HBITMAP)LoadImageW(NULL, L"E1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	enemy.anim.push_back((HBITMAP)LoadImageW(NULL, L"E2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+
+
+
+	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"A0.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"A1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"A2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"A3.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"A4.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim.push_back((HBITMAP)LoadImageW(NULL, L"A5.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 
 
 
 	item.push_back({ {100,  1300, 70, 70, 0}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
+	item.push_back({ {300,  1300, 70, 70, 0}, (HBITMAP)LoadImageW(NULL, L"axe.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
+	item.push_back({ {500,  1300, 70, 70, 0}, (HBITMAP)LoadImageW(NULL, L"hemlet.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
+
+
 	platform.push_back({ {100,  700, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 }
 
@@ -131,18 +162,18 @@ void EnemyMove() {
 	float dist = 500;
 
 
-	float distToHero = abs(enemy.x - hero.model.x);
+	float distToHero = abs(enemy.model.x - hero.model.x);
 
 
 	if (distToHero < dist) {
 
-		if (enemy.x < hero.model.x) { // right enemy
+		if (enemy.model.x < hero.model.x) { // right enemy
 
-			enemy.x += 10;
+			enemy.model.x += 10;
 		}
 		else {
 
-			enemy.x -= 10;
+			enemy.model.x -= 10;
 
 		}
 	}
@@ -269,15 +300,25 @@ bool AnimTime() {
 
 	//DWORD t = timeGetTime();
 	
-	static DWORD lasttime;
+	static DWORD lasttime = 0;
 
 	if (currentTime - lasttime > 500) {
 
-		LastTime = currentTime;
+		lasttime = currentTime;
 		return true;
 	}
 
 	return false;
+}
+
+void HelpAnim(Character temp) {
+
+	temp.currentFrame++;
+	if (temp.currentFrame >= temp.anim.size()) {
+
+		temp.currentFrame = 0;
+	}
+
 }
 
 //void Colise_item() {
@@ -337,6 +378,8 @@ int WINAPI wWinMain(HINSTANCE hI, HINSTANCE hPrevInstance, PWSTR pCmdLine, int n
 	ShowWindow(window.hWnd, nCmdShow);
 
 	SetTimer(window.hWnd, 1, 16, NULL);
+	SetTimer(window.hWnd, 2, 140, NULL);
+
 
 	MSG msg = { };
 
@@ -370,13 +413,36 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 	case WM_TIMER:
 
-		InvalidateRect(hwnd, NULL, FALSE);
+		if (wParam == 1) {
 
-		ProcesImput();
-		Proces_room();
-		collise();
-		EnemyMove();
-		//Colise_item();
+			InvalidateRect(hwnd, NULL, FALSE);
+
+			ProcesImput();
+			Proces_room();
+			collise();
+			EnemyMove();
+			//Colise_item();
+
+		}
+		if (wParam == 2) {
+
+			/*HelpAnim(hero);
+			HelpAnim(enemy);*/
+
+			hero.currentFrame++;
+			if (hero.currentFrame >= hero.anim.size()) {
+
+				hero.currentFrame = 0;
+			}
+
+			enemy.currentFrame++;
+			if (enemy.currentFrame >= enemy.anim.size()) {
+
+				enemy.currentFrame = 0;
+			}
+
+
+		}
 
 	case WM_LBUTTONDOWN:
 
@@ -395,6 +461,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 		PostQuitMessage(0);
 		KillTimer(hwnd, 1);
+		KillTimer(hwnd, 2);
+
 		return 0;
 	}
 
@@ -440,20 +508,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		DrawBitmap(hMemDC, platform[0].pl.x, platform[0].pl.y, platform[0].pl.width, platform[0].pl.height, platform[0].picture, false);
 
 		if (!hero.anim.empty() && hero.currentFrame < hero.anim.size()) {
-			DrawBitmap(hMemDC, hero.model.x, hero.model.y, hero.model.width, hero.model.height,
-				hero.anim[hero.currentFrame], false);
+
+			DrawBitmap(hMemDC, hero.model.x, hero.model.y, hero.model.width, hero.model.height, hero.anim[hero.currentFrame], true);
+
 		}
 
-		// Обновляем кадр анимации по таймеру
-		if (AnimTime()) {
-			hero.currentFrame++;
-			if (hero.currentFrame >= hero.anim.size()) {
-				hero.currentFrame = 0; // Зацикливаем анимацию
-			}
+		if (!enemy.anim.empty() && enemy.currentFrame < enemy.anim.size()) {
+
+			DrawBitmap(hMemDC, enemy.model.x, enemy.model.y, enemy.model.width, enemy.model.height, enemy.anim[enemy.currentFrame], true);
+
 		}
 
 		//}
-		DrawBitmap(hMemDC, enemy.x, enemy.y, enemy.width, enemy.height, hBack, false);
+		//DrawBitmap(hMemDC, enemy.model.x, enemy.model.y, enemy.model.width, enemy.model.height, hBack, false);
 		DrawBitmap(hMemDC, item[0].pl.x, item[0].pl.y, item[0].pl.width, item[0].pl.height, item[0].picture, true);
 
 
