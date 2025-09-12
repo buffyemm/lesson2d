@@ -47,15 +47,15 @@ std::vector<HBITMAP> anim;
 std::vector<object_> item;
 
 int currentFrame = anim.size() - anim.size();
-int lastFrame = 0;
 bool activ = false;
+int HP = 100;
 
 	void HelpAnim() {
 
 		currentFrame++;
 		if (currentFrame >= anim.size()) {
 
-			currentFrame = 0;
+			currentFrame = 1;
 
 		}
 
@@ -251,6 +251,8 @@ void EnemyMove() {
 			enemy.model.x + enemy.model.width >= hero.model.x &&
 			enemy.model.y <= hero.model.y + hero.model.height &&
 			enemy.model.y + enemy.model.height >= hero.model.y && hero.activ) {
+
+			enemy.HP -= 20;
 
 			enemy.model.y -= 500;
 			//enemy.model.x <= hero.model.x + hero.model.width ? enemy.model.x += 200 : enemy.model.x -= 200;
