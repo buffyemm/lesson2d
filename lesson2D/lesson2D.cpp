@@ -215,17 +215,18 @@ void InitGame() {
 
 
 
-	item.push_back({ {100,  1300, 70, 70, 0}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
-	item.push_back({ {300,  1300, 70, 70, 0}, (HBITMAP)LoadImageW(NULL, L"axe.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
-	item.push_back({ {500,  1300, 70, 70, 0}, (HBITMAP)LoadImageW(NULL, L"hemlet.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
+	item.push_back({ {100,  1300, 70, 70, 20}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
+	item.push_back({ {300,  1300, 70, 70, 30}, (HBITMAP)LoadImageW(NULL, L"axe.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
+	item.push_back({ {500,  1300, 70, 70, 15}, (HBITMAP)LoadImageW(NULL, L"hemlet.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 
 
 	platform.push_back({ {100,  700, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 	platform.push_back({ {500,  1050, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 	platform.push_back({ {1000,  300, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
 
-
 }
+
+
 
 void EnemyMove() {
 
@@ -235,7 +236,7 @@ void EnemyMove() {
 	float distToHero = abs(enemy.model.x - hero.model.x);
 
 
-	if (distToHero < dist && enemy.model.y - hero.model.y < 300) {
+	if (distToHero < dist && enemy.model.y - hero.model.y < 200) {
 
 		if (enemy.model.x < hero.model.x) { // right enemy
 
@@ -247,10 +248,11 @@ void EnemyMove() {
 
 		}
 
-		if (enemy.model.x <= hero.model.x + hero.model.width &&
+		if (enemy.model.x <= hero.model.x + hero.model.width &&+
 			enemy.model.x + enemy.model.width >= hero.model.x &&
 			enemy.model.y <= hero.model.y + hero.model.height &&
-			enemy.model.y + enemy.model.height >= hero.model.y && hero.activ) {
+			enemy.model.y + enemy.model.height >= hero.model.y &&
+			hero.activ) {
 
 			enemy.HP -= 20;
 
@@ -273,16 +275,30 @@ void EnemyMove() {
 void ProcesImput() {
 
 	
+
+	static bool drop = false;
 	static float jump = 0;
 
 	float gravity = 30;
 	if (GetAsyncKeyState(VK_LEFT)) hero.model.x -= hero.model.speed;
 	if (GetAsyncKeyState(VK_RIGHT)) hero.model.x += hero.model.speed;
 	if (GetAsyncKeyState(VK_SPACE) && !hero.model.inJump) {
-
+		drop = true;
 		jump = 90;
 		hero.model.inJump = true;
 
+	}
+
+	if (GetAsyncKeyState(VK_CONTROL)) {
+		if (!hero.item.empty() && drop) {
+
+			item.push_back(hero.item[0]);
+
+			hero.item.erase(hero.item.begin());
+			item[item.size() - 1].pl.x = hero.model.x + hero.model.width * 2;
+			item[item.size() - 1].pl.y = hero.model.y;
+			drop = false;
+		}
 	}
 
 	hero.model.y += gravity - jump;
@@ -347,13 +363,25 @@ bool AnimTime() {
 	return false;
 }
 
-void HelpAnim(Character temp) {
+//void HelpAnim(Character temp) {
+//
+//	temp.currentFrame++;
+//	if (temp.currentFrame >= temp.anim.size()) {
+//
+//		temp.currentFrame = 0;
+//	}
+//
+//}
 
-	temp.currentFrame++;
-	if (temp.currentFrame >= temp.anim.size()) {
+void View_item(HDC hdc) {
 
-		temp.currentFrame = 0;
+	for (auto i : hero.item) {
+
+		DrawBitmap(hdc, window.width / 0.1, window.height / 0.1, i.pl.width, i.pl.height, i.picture, true);
+
 	}
+
+
 
 }
 
@@ -385,6 +413,12 @@ void ShowObject(HDC hMemDC) {
 
 	}
 
+		int dist = 70;
+	for (auto i : hero.item) {
+		DrawBitmap(hMemDC, 100 + dist, 100, i.pl.width, i.pl.height, i.picture, true);
+		dist += dist;
+	}
+
 }
 
 void Colise_item() {
@@ -398,7 +432,9 @@ void Colise_item() {
 			hero.model.y + hero.model.height > item[i].pl.y) {
 
 			if (i  == (int)item_::Sword) hero.activ = true;
+			hero.item.push_back(item[i]);
 			item.erase(item.cbegin() + i);
+			
 
 
 
@@ -490,12 +526,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 			InvalidateRect(hwnd, NULL, FALSE);
 
-			ProcesImput();
 			Proces_room();
 			hero.collise(platform);
 			enemy.collise(platform);
 			Colise_item();
 			EnemyMove();
+			ProcesImput();
 
 		}
 		if (wParam == 2) {
