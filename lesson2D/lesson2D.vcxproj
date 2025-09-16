@@ -146,6 +146,11 @@
     <Image Include="A4.bmp" />
     <Image Include="A5.bmp" />
     <Image Include="axe.bmp" />
+    <Image Include="B1.bmp" />
+    <Image Include="B2.bmp" />
+    <Image Include="B3.bmp" />
+    <Image Include="B4.bmp" />
+    <Image Include="B5.bmp" />
     <Image Include="h.bmp" />
     <Image Include="h1.bmp" />
     <Image Include="hemlet.bmp" />
@@ -153,6 +158,11 @@
     <Image Include="les.bmp" />
     <Image Include="lesson2D.ico" />
     <Image Include="need.bmp" />
+    <Image Include="S1.bmp" />
+    <Image Include="S2.bmp" />
+    <Image Include="S3.bmp" />
+    <Image Include="S4.bmp" />
+    <Image Include="S5.bmp" />
     <Image Include="small.ico" />
     <Image Include="sword.bmp" />
     <Image Include="test.bmp" />
