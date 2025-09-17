@@ -14,7 +14,8 @@ enum class item_{
 
 	Sword,
 	Bow, 
-	Axe
+	Axe,
+	block
 
 };
 
@@ -37,31 +38,50 @@ struct object_ {
 
 	sprite pl;
 	HBITMAP picture;
-
+	item_ ID;
 };
 
 struct Character {
 
 sprite model;
-std::vector<HBITMAP> anim[3];
+std::vector<HBITMAP> anim[4];
 std::vector<object_> item;
-item_ count_item = item_::Sword;
-int currentFrame = anim[(int)count_item].size() - anim[(int)count_item].size();
+//item_ current_item = item_::Sword;
+int currentFrame = 0;
 bool activ = false;
 int HP = 100;
 
-	void HelpAnim() {
+int get_anim_index() {
 
-		//int count = hero.item;
+	if (item.empty()) return 0;
+
+	else return (int)item[0].ID + 1;
+
+}
+
+
+void HelpAnim() {
+
+	//int count = hero.item;
+	if (item.empty()) {
 
 		currentFrame++;
-		if (currentFrame >= anim[(int)count_item].size()) {
 
-			currentFrame = 1;
+		if (currentFrame >= anim[0].size()) currentFrame = 0;
 
-		}
+		activ = false;
 
-		if (item.empty()) activ = false;
+	}
+	else {
+
+		int index = get_anim_index();
+
+		currentFrame++;
+
+		if(currentFrame >= anim[index].size()) currentFrame = 0;
+
+	}
+
 
 
 	}
@@ -201,18 +221,7 @@ void Cleanup() {
 
 void InitGame() {
 
-	//hBack = (HBITMAP)LoadImageW(NULL, L"les.pmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-
-	/*hero.model.x = 10;
-	hero.model.y = 10;
-	hero.model.height = 150;
-	hero.model.width = 100;
-	hero.model.speed = 30;
-	enemy.model.height = 150;
-	enemy.model.width = 100;
-	enemy.model.speed = 30;
-	enemy.model.x = window.width / 2;
-	enemy.model.y = window.height - enemy.model.height;*/
+	
 
 	hero.set_parameters(10, 10, 100, 150, 30, 100);
 	enemy.set_parameters(window.width / 2, window.height - 150, 100, 150, 10, 150);
@@ -222,35 +231,35 @@ void InitGame() {
 	enemy.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"E2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 
 
-
 	hero.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"A0.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"A1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"A2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"A3.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"A4.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"A5.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 
-	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"B1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"B2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"B3.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"B4.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"B5.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"A1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"A2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"A3.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"A4.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"A5.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 
-	hero.anim[2].push_back((HBITMAP)LoadImageW(NULL, L"S1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[2].push_back((HBITMAP)LoadImageW(NULL, L"S2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[2].push_back((HBITMAP)LoadImageW(NULL, L"S3.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[2].push_back((HBITMAP)LoadImageW(NULL, L"S4.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-	hero.anim[2].push_back((HBITMAP)LoadImageW(NULL, L"S5.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[2].push_back((HBITMAP)LoadImageW(NULL, L"B1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[2].push_back((HBITMAP)LoadImageW(NULL, L"B2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[2].push_back((HBITMAP)LoadImageW(NULL, L"B3.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[2].push_back((HBITMAP)LoadImageW(NULL, L"B4.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[2].push_back((HBITMAP)LoadImageW(NULL, L"B5.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 
-
-	item.push_back({ {100,  1300, 70, 70, 20}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
-	item.push_back({ {300,  1300, 70, 70, 30}, (HBITMAP)LoadImageW(NULL, L"axe.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
-	item.push_back({ {500,  1300, 70, 70, 15}, (HBITMAP)LoadImageW(NULL, L"hemlet.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
+	hero.anim[3].push_back((HBITMAP)LoadImageW(NULL, L"S1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[3].push_back((HBITMAP)LoadImageW(NULL, L"S2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[3].push_back((HBITMAP)LoadImageW(NULL, L"S3.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[3].push_back((HBITMAP)LoadImageW(NULL, L"S4.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	hero.anim[3].push_back((HBITMAP)LoadImageW(NULL, L"S5.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 
 
-	platform.push_back({ {100,  700, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
-	platform.push_back({ {500,  1050, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
-	platform.push_back({ {1000,  300, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE) });
+	item.push_back({ {100,  1300, 70, 70, 20}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::Sword });
+	item.push_back({ {300,  1300, 70, 70, 30}, (HBITMAP)LoadImageW(NULL, L"axe.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::Axe });
+	item.push_back({ {500,  1300, 70, 70, 15}, (HBITMAP)LoadImageW(NULL, L"bow.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::Bow });
+
+
+	platform.push_back({ {100,  700, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::block });
+	platform.push_back({ {500,  1050, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::block });
+	platform.push_back({ {1000,  300, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::block });
 
 }
 
@@ -288,7 +297,7 @@ void EnemyMove() {
 
 			if (!hero.item.empty() && enemy.HP > 0) {
 
-			enemy.HP -= hero.item[0].pl.speed;
+			enemy.HP -= hero.item[hero.get_anim_index()].pl.speed;
 			enemy.model.y -= 200;
 
 			}
@@ -421,11 +430,20 @@ void ShowObject(HDC hMemDC) {
 
 	}
 
-	if (!hero.anim[(int)hero.count_item].empty() && hero.currentFrame < hero.anim[(int)hero.count_item].size()) {
+	if (hero.item.empty()) {
 
-		hero.activ ? DrawBitmap(hMemDC, hero.model.x, hero.model.y, hero.model.width, hero.model.height, hero.anim[(int)hero.count_item][hero.currentFrame], true) :
-		DrawBitmap(hMemDC, hero.model.x, hero.model.y, hero.model.width, hero.model.height, hero.anim[0][0], true);
+		if(!hero.anim[hero.get_anim_index()].empty() && hero.currentFrame < hero.anim[hero.get_anim_index()].size())
 
+		DrawBitmap(hMemDC, hero.model.x, hero.model.y, hero.model.width, hero.model.height, hero.anim[hero.get_anim_index()][hero.currentFrame], true);
+
+	}
+	else {
+
+		if (hero.get_anim_index() < 4 && !hero.anim[hero.get_anim_index()].empty() && hero.currentFrame < hero.anim[hero.get_anim_index()].size()) {
+
+			DrawBitmap(hMemDC, hero.model.x, hero.model.y, hero.model.width, hero.model.height, hero.anim[hero.get_anim_index()][hero.currentFrame], true);
+
+		}
 	}
 
 	if (!enemy.anim[0].empty() && enemy.currentFrame < enemy.anim[0].size()) {
@@ -462,30 +480,9 @@ void Colise_item() {
 			
 			hero.item.push_back(item[i]);
 			item.erase(item.cbegin() + i);
-			
+			hero.activ = true;
 
-			switch (i) {
-
-			case (int)item_::Sword :
-
-				hero.count_item = item_::Sword;
-				hero.activ = true;
-				break;
-
-			case (int)item_::Bow :
-
-				hero.count_item = item_::Bow;
-				hero.activ = true;
-				break;
-
-			case (int)item_::Axe :
-
-
-				hero.count_item = item_::Axe;
-				hero.activ = true;
-				break;
-
-			}
+			break;
 
 
 
