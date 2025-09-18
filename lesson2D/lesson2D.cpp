@@ -41,6 +41,8 @@ struct object_ {
 	item_ ID;
 };
 
+//POINT mouse;
+
 struct Character {
 
 sprite model;
@@ -159,9 +161,35 @@ void HelpAnim() {
 
 std::vector<object_> platform;
 std::vector<object_> item;
+object_ arrow;
 
 Character hero;
 Character enemy;
+
+bool ar = false;
+
+
+struct {
+
+	POINT p;
+
+	bool collise_mouse() {
+
+		if (p.x >= hero.model.x &&
+			p.x <= hero.model.x + hero.model.width &&
+			p.y <= hero.model.y + hero.model.height &&
+			p.y >= hero.model.y)
+			return true;
+
+		else
+			return false;
+
+	}
+
+
+}mouse;
+
+
 HBITMAP hBack = NULL;
 HBITMAP test = NULL;
 
@@ -261,6 +289,10 @@ void InitGame() {
 	platform.push_back({ {500,  1050, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::block });
 	platform.push_back({ {1000,  300, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::block });
 
+	arrow.pl.width = 30;
+	arrow.pl.height = 10;
+	arrow.picture = (HBITMAP)LoadImageW(NULL, L"h.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	arrow.pl.speed = 30;
 }
 
 
@@ -297,7 +329,7 @@ void EnemyMove() {
 
 			if (!hero.item.empty() && enemy.HP > 0) {
 
-			enemy.HP -= hero.item[hero.get_anim_index()].pl.speed;
+			enemy.HP -= hero.item[0].pl.speed;
 			enemy.model.y -= 200;
 
 			}
@@ -320,7 +352,17 @@ void EnemyMove() {
 }
 
 
+void Enemy_Fight(){}
 
+void move_arrow() {
+
+	
+	arrow.pl.x = hero.model.x + hero.model.width;
+	arrow.pl.y = hero.model.y + hero.model.height / 2.;
+
+	arrow.pl.x += arrow.pl.speed;
+
+}
 
 void ProcesImput() {
 
@@ -358,7 +400,15 @@ void ProcesImput() {
 	if(hero.model.y + hero.model.height >= window.height)
 	hero.model.inJump = false;
 
+	if (ar) {
 
+		//move_arrow();
+
+		arrow.pl.x = hero.model.x + hero.model.width;
+		arrow.pl.y = hero.model.y + hero.model.height / 2.;
+
+	}
+		//arrow.pl.x += arrow.pl.speed;
 }
 
 
@@ -465,6 +515,10 @@ void ShowObject(HDC hMemDC) {
 		dist += dist;
 	}
 
+
+	if(ar)
+	DrawBitmap( hMemDC ,arrow.pl.x, arrow.pl.y, arrow.pl.width, arrow.pl.height, arrow.picture, true);
+
 }
 
 void Colise_item() {
@@ -497,6 +551,7 @@ void Colise_item() {
 //bool DrawLine(HDC ) {
 //
 //}
+
 
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -562,13 +617,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	case WM_CREATE: {
 
 
-		test = (HBITMAP)LoadImageW(NULL, L"h.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+
 
 		hBack = (HBITMAP)LoadImageW(NULL, L"les.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
 		//InitGame();
 
-		if (!hBack || !test) MessageBoxW(hwnd, L"Не удалось!", L"ОШИБКА", MB_ICONERROR);
+		//if (!hBack || !test) MessageBoxW(hwnd, L"Не удалось!", L"ОШИБКА", MB_ICONERROR);
 		break;
 	}
 
@@ -576,8 +632,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 		if (wParam == 1) {
 
+			GetCursorPos(&mouse.p);
 			InvalidateRect(hwnd, NULL, FALSE);
-
 			Proces_room();
 			hero.collise(platform);
 			enemy.collise(platform);
@@ -588,22 +644,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		}
 		if (wParam == 2) {
 
-		
-
 			hero.HelpAnim();
 			enemy.HelpAnim();
-
 		
-
 		}
+
+		break;
 
 	case WM_LBUTTONDOWN:
-
-		if (test) {
-
-		}
-
-
+		//if (mouse.collise_mouse()) {
+			
+			ar = true;
+			move_arrow();
+			//MessageBoxW(hwnd, L"Попал", L"MESSAGE", MB_ICONINFORMATION);
+		//}
 		break;
 
 	case WM_SIZE:
