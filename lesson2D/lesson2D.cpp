@@ -41,6 +41,18 @@ struct object_ {
 	item_ ID;
 };
 
+
+struct ar {
+
+	sprite model;
+	HBITMAP picture;
+	bool activ;
+	float angel;
+	float directionX, directionY;
+
+};
+
+float dx, dy;
 //POINT mouse;
 
 struct Character {
@@ -161,12 +173,10 @@ void HelpAnim() {
 
 std::vector<object_> platform;
 std::vector<object_> item;
-object_ arrow;
 
 Character hero;
 Character enemy;
-
-bool ar = false;
+ar arrow;
 
 
 struct {
@@ -195,28 +205,6 @@ HBITMAP test = NULL;
 
 DWORD currentTime = timeGetTime();
 DWORD LastTime = 0;
-
-
-//void ShowBit(HWND hw, int x, int y, int width, int height, HBITMAP name) {
-//
-//	if (!name)return;
-//
-//	HDC hdc = GetDC(hw);
-//	HDC hMemDC = CreateCompatibleDC(hdc); //создаю окно в памяти
-//
-//	HBITMAP temp = (HBITMAP)SelectObject(hMemDC, name); // помещаем картинку во временный сегмент
-//	BITMAP bmp;
-//	GetObject(name, sizeof(BITMAP), &bmp); // узнаем размер изображения
-//
-//	
-//
-//	StretchBlt(hdc, x, y, width, height, hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
-//	
-//
-//	SelectObject(hMemDC, temp);
-//	DeleteDC(hMemDC);
-//	ReleaseDC(hw, hdc);
-//}
 
 
 
@@ -252,6 +240,14 @@ void InitGame() {
 	
 
 	hero.set_parameters(10, 10, 100, 150, 30, 100);
+	//arrow.model.x = hero.model.x + hero.model.width * 2;
+	//arrow.model.y = hero.model.y + hero.model.height / 2;
+	arrow.model.width = 40;
+	arrow.model.height = 10;
+	arrow.model.speed = 20;
+	arrow.picture = (HBITMAP)LoadImageW(NULL, L"hero.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	arrow.activ = false;
+
 	enemy.set_parameters(window.width / 2, window.height - 150, 100, 150, 10, 150);
 
 	enemy.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"E0.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
@@ -289,12 +285,37 @@ void InitGame() {
 	platform.push_back({ {500,  1050, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::block });
 	platform.push_back({ {1000,  300, 500, 70, 0}, (HBITMAP)LoadImageW(NULL, L"test.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::block });
 
-	arrow.pl.width = 30;
-	arrow.pl.height = 10;
-	arrow.picture = (HBITMAP)LoadImageW(NULL, L"h.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-	arrow.pl.speed = 30;
+	
 }
 
+
+void Enemy_Fight() {
+
+	if (enemy.model.x <= hero.model.x + hero.model.width && +
+		enemy.model.x + enemy.model.width >= hero.model.x &&
+		enemy.model.y <= hero.model.y + hero.model.height &&
+		enemy.model.y + enemy.model.height >= hero.model.y &&
+		hero.activ) {
+
+
+		if (!hero.item.empty() && enemy.HP > 0) {
+
+			enemy.HP -= hero.item[0].pl.speed;
+			enemy.model.y -= 200;
+
+		}
+
+		if (enemy.HP <= 0) {
+
+			enemy.set_parameters(rand() % window.width, window.height / 2, 100, 150, 10, 100);
+
+		}
+		//enemy.model.x <= hero.model.x + hero.model.width ? enemy.model.x += 200 : enemy.model.x -= 200;
+
+
+	}
+
+}
 
 
 void EnemyMove() {
@@ -320,29 +341,8 @@ void EnemyMove() {
 
 		}
 
-		if (enemy.model.x <= hero.model.x + hero.model.width && +
-			enemy.model.x + enemy.model.width >= hero.model.x &&
-			enemy.model.y <= hero.model.y + hero.model.height &&
-			enemy.model.y + enemy.model.height >= hero.model.y &&
-			hero.activ) {
-
-
-			if (!hero.item.empty() && enemy.HP > 0) {
-
-			enemy.HP -= hero.item[0].pl.speed;
-			enemy.model.y -= 200;
-
-			}
-			
-			if (enemy.HP <= 0) {
-
-				enemy.set_parameters(rand() % window.width, window.height / 2, 100, 150, 10, 100);
-
-			}
-			//enemy.model.x <= hero.model.x + hero.model.width ? enemy.model.x += 200 : enemy.model.x -= 200;
-
-
-		}
+		Enemy_Fight();
+		
 
 	}
 
@@ -352,16 +352,12 @@ void EnemyMove() {
 }
 
 
-void Enemy_Fight(){}
+void ProcesBall() {
 
-void move_arrow() {
-
-	
-	arrow.pl.x = hero.model.x + hero.model.width;
-	arrow.pl.y = hero.model.y + hero.model.height / 2.;
-
-	arrow.pl.x += arrow.pl.speed;
-
+	if (arrow.activ) {
+		arrow.model.x += arrow.directionX * arrow.model.speed;
+		arrow.model.y += arrow.directionY * arrow.model.speed;
+	}
 }
 
 void ProcesImput() {
@@ -372,9 +368,10 @@ void ProcesImput() {
 	static float jump = 0;
 
 	float gravity = 30;
-	if (GetAsyncKeyState(VK_LEFT)) hero.model.x -= hero.model.speed;
-	if (GetAsyncKeyState(VK_RIGHT)) hero.model.x += hero.model.speed;
+	if (GetAsyncKeyState('A')) hero.model.x -= hero.model.speed;
+	if (GetAsyncKeyState('D')) hero.model.x += hero.model.speed;
 	if (GetAsyncKeyState(VK_SPACE) && !hero.model.inJump) {
+
 		drop = true;
 		jump = 90;
 		hero.model.inJump = true;
@@ -393,23 +390,27 @@ void ProcesImput() {
 		}
 	}
 
+	//if (GetAsyncKeyState(VK_LSHIFT)) {
+
+	//	arrow.model.x = hero.model.x + hero.model.width * 2;
+	//	arrow.model.y = hero.model.y + hero.model.height / 2;
+
+	//	arrow.activ = true;
+
+	//}
+	
+
+
 	hero.model.y += gravity - jump;
 	jump *= .9;
 	hero.model.y = min((hero.model.y), (window.height - hero.model.height));
 
 	if(hero.model.y + hero.model.height >= window.height)
 	hero.model.inJump = false;
-
-	if (ar) {
-
-		//move_arrow();
-
-		arrow.pl.x = hero.model.x + hero.model.width;
-		arrow.pl.y = hero.model.y + hero.model.height / 2.;
-
-	}
-		//arrow.pl.x += arrow.pl.speed;
+	//arrow.model.x += arrow.model.speed;
 }
+
+
 
 
 void Proces_room() {
@@ -516,8 +517,11 @@ void ShowObject(HDC hMemDC) {
 	}
 
 
-	if(ar)
-	DrawBitmap( hMemDC ,arrow.pl.x, arrow.pl.y, arrow.pl.width, arrow.pl.height, arrow.picture, true);
+	if(arrow.activ)  
+
+		DrawBitmap(hMemDC, arrow.model.x, arrow.model.y, arrow.model.width, arrow.model.height, arrow.picture, false);
+
+	
 
 }
 
@@ -551,6 +555,7 @@ void Colise_item() {
 //bool DrawLine(HDC ) {
 //
 //}
+
 
 
 
@@ -640,6 +645,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			Colise_item();
 			EnemyMove();
 			ProcesImput();
+			ProcesBall();
+
 
 		}
 		if (wParam == 2) {
@@ -651,14 +658,36 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 		break;
 
+
 	case WM_LBUTTONDOWN:
-		//if (mouse.collise_mouse()) {
-			
-			ar = true;
-			move_arrow();
-			//MessageBoxW(hwnd, L"Попал", L"MESSAGE", MB_ICONINFORMATION);
-		//}
+	{
+		arrow.model.x = hero.model.x + hero.model.width * 2;
+		arrow.model.y = hero.model.y + hero.model.height / 2;
+
+		// Вычисляем вектор направления (НЕ абсолютные значения!)
+		int targetX = mouse.p.x;
+		int targetY = mouse.p.y;
+
+		// Вычисляем разницы
+		int diffX = targetX - arrow.model.x;
+		int diffY = targetY - arrow.model.y;
+
+		// Вычисляем длину вектора (расстояние)
+		float distance = sqrt(diffX * diffX + diffY * diffY);
+
+		// Нормализуем вектор (делаем длину = 1)
+		if (distance > 0) {
+			arrow.directionX = diffX / distance;
+			arrow.directionY = diffY / distance;
+		}
+		else {
+			arrow.directionX = 0;
+			arrow.directionY = 0;
+		}
+
+		arrow.activ = true;
 		break;
+	}
 
 	case WM_SIZE:
 		InitWindow();
