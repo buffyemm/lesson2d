@@ -42,17 +42,46 @@ struct object_ {
 };
 
 
-struct ar {
+class ar {
+
+public:
 
 	sprite model;
 	HBITMAP picture;
 	bool activ;
-	float angel;
 	float directionX, directionY;
+
+	/*~ar() {
+		
+		if (picture != NULL) {
+			DeleteObject(picture);
+			picture = NULL;
+		}
+	
+	}*/
+
+	ar(float x, float y) {
+
+		model.x = x;
+		model.y = y;
+		model.speed = 20;
+		model.width = 40;
+		model.height = 40;
+		picture = (HBITMAP)LoadImageW(NULL, L"ball.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+		activ = false;
+	}
+
+	bool isOutOfScreen() {
+
+		return (model.x + model.width > window.width ||
+			model.x < 0 ||
+			model.y < 0 ||
+			model.y + model.height > window.height);
+	}
 
 };
 
-float dx, dy;
+//float dx, dy;
 //POINT mouse;
 
 struct Character {
@@ -176,7 +205,7 @@ std::vector<object_> item;
 
 Character hero;
 Character enemy;
-ar arrow;
+std::vector<ar>arrow;
 
 
 struct {
@@ -237,16 +266,10 @@ void Cleanup() {
 
 void InitGame() {
 
-	
 
 	hero.set_parameters(10, 10, 100, 150, 30, 100);
-	//arrow.model.x = hero.model.x + hero.model.width * 2;
-	//arrow.model.y = hero.model.y + hero.model.height / 2;
-	arrow.model.width = 40;
-	arrow.model.height = 10;
-	arrow.model.speed = 20;
-	arrow.picture = (HBITMAP)LoadImageW(NULL, L"hero.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-	arrow.activ = false;
+
+	
 
 	enemy.set_parameters(window.width / 2, window.height - 150, 100, 150, 10, 150);
 
@@ -310,7 +333,6 @@ void Enemy_Fight() {
 			enemy.set_parameters(rand() % window.width, window.height / 2, 100, 150, 10, 100);
 
 		}
-		//enemy.model.x <= hero.model.x + hero.model.width ? enemy.model.x += 200 : enemy.model.x -= 200;
 
 
 	}
@@ -354,9 +376,12 @@ void EnemyMove() {
 
 void ProcesBall() {
 
-	if (arrow.activ) {
-		arrow.model.x += arrow.directionX * arrow.model.speed;
-		arrow.model.y += arrow.directionY * arrow.model.speed;
+	for (int i = 0; i < arrow.size(); i++) {
+
+		if (arrow[i].activ) {
+			arrow[i].model.x += arrow[i].directionX * arrow[i].model.speed;
+			arrow[i].model.y += arrow[i].directionY * arrow[i].model.speed;
+		}
 	}
 }
 
@@ -390,14 +415,6 @@ void ProcesImput() {
 		}
 	}
 
-	//if (GetAsyncKeyState(VK_LSHIFT)) {
-
-	//	arrow.model.x = hero.model.x + hero.model.width * 2;
-	//	arrow.model.y = hero.model.y + hero.model.height / 2;
-
-	//	arrow.activ = true;
-
-	//}
 	
 
 
@@ -407,7 +424,6 @@ void ProcesImput() {
 
 	if(hero.model.y + hero.model.height >= window.height)
 	hero.model.inJump = false;
-	//arrow.model.x += arrow.model.speed;
 }
 
 
@@ -503,7 +519,6 @@ void ShowObject(HDC hMemDC) {
 
 	}
 
-	//DrawBitmap(hMemDC, enemy.model.x, enemy.model.y, enemy.model.width, enemy.model.height, hBack, false);
 	for (auto stuff : item) {
 
 	DrawBitmap(hMemDC, stuff.pl.x, stuff.pl.y, stuff.pl.width, stuff.pl.height, stuff.picture, true);
@@ -516,13 +531,15 @@ void ShowObject(HDC hMemDC) {
 		dist += dist;
 	}
 
+	for (auto a : arrow) {
 
-	if(arrow.activ)  
+		if (a.activ)
 
-		DrawBitmap(hMemDC, arrow.model.x, arrow.model.y, arrow.model.width, arrow.model.height, arrow.picture, false);
+			DrawBitmap(hMemDC, a.model.x, a.model.y, a.model.width, a.model.height, a.picture, true);
 
+	}
 	
-
+	
 }
 
 void Colise_item() {
@@ -557,7 +574,62 @@ void Colise_item() {
 //}
 
 
+void Mouse_Action() {
 
+
+	arrow.push_back(ar(hero.model.x + hero.model.width, hero.model.y + hero.model.height / 2));
+	/*arrow.model.x = hero.model.x + hero.model.width;
+	arrow.model.y = hero.model.y + hero.model.height / 2;*/
+
+	// Вычисляем вектор направления (НЕ абсолютные значения!)
+	int targetX = mouse.p.x;
+	int targetY = mouse.p.y;
+
+	for (int i = 0; i < arrow.size(); i++) {
+		if (!arrow[i].activ) {
+
+			// Вычисляем разницы
+			int diffX = targetX - arrow[i].model.x;
+			int diffY = targetY - arrow[i].model.y;
+
+			// Вычисляем длину вектора (расстояние)
+			float distance = sqrt(diffX * diffX + diffY * diffY);
+
+			// Нормализуем вектор (делаем длину = 1)
+			if (distance > 0) {
+				arrow[i].directionX = diffX / distance;
+				arrow[i].directionY = diffY / distance;
+			}
+			else {
+				arrow[i].directionX = 0;
+				arrow[i].directionY = 0;
+			}
+
+			arrow[i].activ = true;
+		}
+	}
+
+
+}
+
+
+void Clean_arrows() {
+
+	for (int i = arrow.size() - 1; i >= 0; i--) {
+
+		if (arrow[i].isOutOfScreen()) {
+
+			if (arrow[i].picture != NULL) {
+				DeleteObject(arrow[i].picture);
+				arrow[i].picture = NULL;
+			}
+
+			arrow.erase(arrow.begin() + i);
+		}
+
+	}
+
+}
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -645,15 +717,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			Colise_item();
 			EnemyMove();
 			ProcesImput();
+			
 			ProcesBall();
+
+			
 
 
 		}
 		if (wParam == 2) {
 
+			
 			hero.HelpAnim();
 			enemy.HelpAnim();
 		
+		}
+
+		if (wParam == 3) {
+
+			KillTimer(hwnd, 3);
+			Clean_arrows();
+			Mouse_Action();
 		}
 
 		break;
@@ -661,31 +744,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 	case WM_LBUTTONDOWN:
 	{
-		arrow.model.x = hero.model.x + hero.model.width * 2;
-		arrow.model.y = hero.model.y + hero.model.height / 2;
+		KillTimer(hwnd, 3);
+		SetTimer(hwnd, 3, 300, NULL);
 
-		// Вычисляем вектор направления (НЕ абсолютные значения!)
-		int targetX = mouse.p.x;
-		int targetY = mouse.p.y;
-
-		// Вычисляем разницы
-		int diffX = targetX - arrow.model.x;
-		int diffY = targetY - arrow.model.y;
-
-		// Вычисляем длину вектора (расстояние)
-		float distance = sqrt(diffX * diffX + diffY * diffY);
-
-		// Нормализуем вектор (делаем длину = 1)
-		if (distance > 0) {
-			arrow.directionX = diffX / distance;
-			arrow.directionY = diffY / distance;
-		}
-		else {
-			arrow.directionX = 0;
-			arrow.directionY = 0;
-		}
-
-		arrow.activ = true;
 		break;
 	}
 
