@@ -8,6 +8,10 @@
 #include<windows.h>
 #include <iostream>
 #include <vector>
+#include <any>
+
+BOOL time_at = false;
+
 
 
 enum class item_{
@@ -25,6 +29,7 @@ struct sprite {
 	bool inJump = false;
 };
 
+bool test_col(sprite first, sprite second, bool flag);
 
 struct {
 
@@ -34,22 +39,24 @@ struct {
 
 }window;
 
-struct object_ {
-
-	sprite pl;
+class object_ {
+public:
+	sprite model;
 	HBITMAP picture;
 	item_ ID;
 };
 
 
-class ar {
+class ar : public object_ {
 
 public:
 
-	sprite model;
-	HBITMAP picture;
+	//sprite model;
+	//HBITMAP picture;
 	bool activ;
 	float directionX, directionY;
+	std::vector<HBITMAP> anim;
+	int currentFrame = 0;
 
 	/*~ar() {
 		
@@ -64,12 +71,19 @@ public:
 
 		model.x = x;
 		model.y = y;
-		model.speed = 20;
+		model.speed = 10;
 		model.width = 40;
 		model.height = 40;
-		picture = (HBITMAP)LoadImageW(NULL, L"ball.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+		anim.push_back((HBITMAP)LoadImageW(NULL, L"ball.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+		anim.push_back((HBITMAP)LoadImageW(NULL, L"ball1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+		anim.push_back((HBITMAP)LoadImageW(NULL, L"ball2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+		anim.push_back((HBITMAP)LoadImageW(NULL, L"ball3.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+
 		activ = false;
 	}
+
+	
+
 
 	bool isOutOfScreen() {
 
@@ -77,6 +91,19 @@ public:
 			model.x < 0 ||
 			model.y < 0 ||
 			model.y + model.height > window.height);
+	}
+
+	
+
+
+	void HelpAnim() {
+
+
+			currentFrame++;
+
+			if (currentFrame >= anim.size()) currentFrame = 0;
+
+
 	}
 
 };
@@ -127,7 +154,7 @@ void HelpAnim() {
 
 
 
-	}
+}
 
 	void set_parameters(float x, float y, float width, float height, float speed, int hp) {
 
@@ -145,43 +172,40 @@ void HelpAnim() {
 
 		for (auto p : platform) {
 
-			if (model.x + model.width >= p.pl.x &&
-				model.x <= p.pl.x + p.pl.width &&
-				model.y < p.pl.y + p.pl.height &&
-				model.y + model.height > p.pl.y) {
+			if (test_col(model, p.model, true)) {
 
 
-				float UP = abs(p.pl.y - (model.y + model.height));
-				float DOWN = abs((p.pl.y + p.pl.height) - model.y);
+				float UP = abs(p.model.y - (model.y + model.height));
+				float DOWN = abs((p.model.y + p.model.height) - model.y);
 
 				//float RIGHT = ();
 				int over_Y = min(UP, DOWN);
 
-				float LEFT = abs(p.pl.x - (model.x + model.width));
-				float RIGHT = abs(p.pl.x + p.pl.width - model.x);
+				float LEFT = abs(p.model.x - (model.x + model.width));
+				float RIGHT = abs(p.model.x + p.model.width - model.x);
 				float over_X = min(LEFT, RIGHT);
 
 				if (over_X < over_Y)
 				{
 					if (LEFT < RIGHT)
 					{
-						model.x = p.pl.x - model.width;
+						model.x = p.model.x - model.width;
 					}
 					else
 					{
-						model.x = p.pl.x + p.pl.width;
+						model.x = p.model.x + p.model.width;
 					}
 				}
 				else {
 
 					if (UP < DOWN)
 					{
-						model.y = p.pl.y - model.height;
+						model.y = p.model.y - model.height;
 						model.inJump = false;
 					}
 					else
 					{
-						model.y = p.pl.y + p.pl.height;
+						model.y = p.model.y + p.model.height;
 					}
 				}
 
@@ -279,7 +303,7 @@ void InitGame() {
 
 
 	hero.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"A0.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
-
+	
 	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"A1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"A2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 	hero.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"A3.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
@@ -311,21 +335,63 @@ void InitGame() {
 	
 }
 
+bool test_col(sprite first, sprite second, bool flag) {
+
+
+	if (first.x <= second.x + second.width && +
+		first.x + first.width >= second.x &&
+		first.y <= second.y + second.height &&
+		first.y + first.height >= second.y &&
+		flag) {
+
+		return true;
+	}
+
+	return false;
+
+}
+
+void Collise_ball() {
+
+
+	if (!hero.item.empty() && hero.item[0].ID == item_::Bow) {
+
+		for (auto ball : arrow) {
+
+			if (test_col(enemy.model, ball.model, hero.activ)) {
+
+
+				if (enemy.HP > 0) {
+
+					enemy.HP -= hero.item[0].model.speed;
+					enemy.model.y -= 500;
+
+				}
+				else {
+
+					enemy.set_parameters(rand() % window.width, window.height / 2, 100, 150, 10, 100);
+
+				}
+
+			}
+
+		}
+
+	}
+
+}
 
 void Enemy_Fight() {
 
-	if (enemy.model.x <= hero.model.x + hero.model.width && +
-		enemy.model.x + enemy.model.width >= hero.model.x &&
-		enemy.model.y <= hero.model.y + hero.model.height &&
-		enemy.model.y + enemy.model.height >= hero.model.y &&
-		hero.activ) {
+	if (test_col(enemy.model, hero.model, hero.activ)) {
 
 
-		if (!hero.item.empty() && enemy.HP > 0) {
+		if (!hero.item.empty() && enemy.HP > 0 && (hero.item[0].ID == item_::Axe || hero.item[0].ID == item_::Sword)) {
 
-			enemy.HP -= hero.item[0].pl.speed;
+			
+			enemy.HP -= hero.item[0].model.speed;
 			enemy.model.y -= 200;
-
+		
 		}
 
 		if (enemy.HP <= 0) {
@@ -387,8 +453,6 @@ void ProcesBall() {
 
 void ProcesImput() {
 
-	
-
 	static bool drop = false;
 	static float jump = 0;
 
@@ -409,13 +473,11 @@ void ProcesImput() {
 			item.push_back(hero.item[0]);
 
 			hero.item.erase(hero.item.begin());
-			item[item.size() - 1].pl.x = hero.model.x + hero.model.width * 2;
-			item[item.size() - 1].pl.y = hero.model.y;
+			item[item.size() - 1].model.x = hero.model.x + hero.model.width * 2;
+			item[item.size() - 1].model.y = hero.model.y;
 			drop = false;
 		}
 	}
-
-	
 
 
 	hero.model.y += gravity - jump;
@@ -425,7 +487,6 @@ void ProcesImput() {
 	if(hero.model.y + hero.model.height >= window.height)
 	hero.model.inJump = false;
 }
-
 
 
 
@@ -448,8 +509,7 @@ void Proces_room() {
 
 }
 
-
-		
+	
 
 auto DrawBitmap = [](HDC hdcDest, int x, int y, int w, int h, HBITMAP hBmp, bool transparent) {
 	if (!hBmp) return;
@@ -493,7 +553,7 @@ void ShowObject(HDC hMemDC) {
 
 	for (auto pl : platform) {
 
-	DrawBitmap(hMemDC,pl.pl.x, pl.pl.y, pl.pl.width, pl.pl.height, pl.picture, false);
+	DrawBitmap(hMemDC,pl.model.x, pl.model.y, pl.model.width, pl.model.height, pl.picture, false);
 
 	}
 
@@ -521,13 +581,13 @@ void ShowObject(HDC hMemDC) {
 
 	for (auto stuff : item) {
 
-	DrawBitmap(hMemDC, stuff.pl.x, stuff.pl.y, stuff.pl.width, stuff.pl.height, stuff.picture, true);
+	DrawBitmap(hMemDC, stuff.model.x, stuff.model.y, stuff.model.width, stuff.model.height, stuff.picture, true);
 
 	}
 
 		int dist = 70;
 	for (auto i : hero.item) {
-		DrawBitmap(hMemDC, 100 + dist, 100, i.pl.width, i.pl.height, i.picture, true);
+		DrawBitmap(hMemDC, 100 + dist, 100, i.model.width, i.model.height, i.picture, true);
 		dist += dist;
 	}
 
@@ -535,7 +595,7 @@ void ShowObject(HDC hMemDC) {
 
 		if (a.activ)
 
-			DrawBitmap(hMemDC, a.model.x, a.model.y, a.model.width, a.model.height, a.picture, true);
+			DrawBitmap(hMemDC, a.model.x, a.model.y, a.model.width, a.model.height, a.anim[a.currentFrame], true);
 
 	}
 	
@@ -546,25 +606,16 @@ void Colise_item() {
 
 	for (int i = 0; i < item.size(); i++) {
 
-		
-		if (hero.model.x + hero.model.width >= item[i].pl.x &&
-			hero.model.x <= item[i].pl.x + item[i].pl.width &&
-			hero.model.y < item[i].pl.y + item[i].pl.height &&
-			hero.model.y + hero.model.height > item[i].pl.y) {
+		if (test_col(hero.model, item[i].model, true)) {
 
-			
 			hero.item.push_back(item[i]);
 			item.erase(item.cbegin() + i);
 			hero.activ = true;
 
 			break;
 
-
-
 		}
 
-
-		
 	}
 
 }
@@ -578,10 +629,8 @@ void Mouse_Action() {
 
 
 	arrow.push_back(ar(hero.model.x + hero.model.width, hero.model.y + hero.model.height / 2));
-	/*arrow.model.x = hero.model.x + hero.model.width;
-	arrow.model.y = hero.model.y + hero.model.height / 2;*/
 
-	// Вычисляем вектор направления (НЕ абсолютные значения!)
+	// Вычисляем вектор направления
 	int targetX = mouse.p.x;
 	int targetY = mouse.p.y;
 
@@ -719,7 +768,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			ProcesImput();
 			
 			ProcesBall();
-
+			Collise_ball();
 			
 
 
@@ -729,14 +778,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			
 			hero.HelpAnim();
 			enemy.HelpAnim();
-		
+			for (int i = 0; i < arrow.size(); i++) {
+
+				arrow[i].HelpAnim();
+
+			}
 		}
 
-		if (wParam == 3) {
+		if (wParam == 3 && time_at) {
 
 			KillTimer(hwnd, 3);
 			Clean_arrows();
 			Mouse_Action();
+			time_at = false;
 		}
 
 		break;
@@ -744,8 +798,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 	case WM_LBUTTONDOWN:
 	{
-		KillTimer(hwnd, 3);
-		SetTimer(hwnd, 3, 300, NULL);
+
+		if (!time_at && !hero.item.empty() && hero.item[0].ID == item_::Bow) {
+		SetTimer(hwnd, 3, 600, NULL);
+		time_at = true;
+		}
 
 		break;
 	}

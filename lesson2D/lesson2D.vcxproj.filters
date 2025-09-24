@@ -120,5 +120,17 @@
     <Image Include="S5.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="ball.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="ball1.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="ball2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="ball3.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
