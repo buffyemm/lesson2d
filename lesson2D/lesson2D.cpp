@@ -149,7 +149,14 @@ void HelpAnim() {
 		currentFrame++;
 
 		if(currentFrame >= anim[index].size()) currentFrame = 0;
+		
+		if (activ) {
+			currentFrame++;
 
+			if (currentFrame >= anim[index].size()) currentFrame = 0;
+
+			activ = false;
+		}
 	}
 
 
@@ -221,6 +228,8 @@ void HelpAnim() {
 	}
 
 };
+
+
 
 
 
@@ -301,6 +310,15 @@ void InitGame() {
 	enemy.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"E1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 	enemy.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"E2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 
+	enemy.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"D0.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	enemy.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"D1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	enemy.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"D2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	enemy.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"D3.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	enemy.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"D4.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	enemy.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"D5.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+	enemy.anim[1].push_back((HBITMAP)LoadImageW(NULL, L"D6.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
+
+
 
 	hero.anim[0].push_back((HBITMAP)LoadImageW(NULL, L"A0.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE));
 	
@@ -341,8 +359,8 @@ bool test_col(sprite first, sprite second, bool flag) {
 	if (first.x <= second.x + second.width && +
 		first.x + first.width >= second.x &&
 		first.y <= second.y + second.height &&
-		first.y + first.height >= second.y &&
-		flag) {
+		first.y + first.height >= second.y /*&&
+		flag*/) {
 
 		return true;
 	}
@@ -369,7 +387,11 @@ void Collise_ball() {
 				}
 				else {
 
-					enemy.set_parameters(rand() % window.width, window.height / 2, 100, 150, 10, 100);
+					enemy.item.push_back({ {100,  1300, 70, 70, 20}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::Sword });
+
+
+					//enemy.activ = true;
+					//enemy.set_parameters(rand() % window.width, window.height / 2, 100, 150, 10, 100);
 
 				}
 
@@ -396,10 +418,13 @@ void Enemy_Fight() {
 
 		if (enemy.HP <= 0) {
 
-			enemy.set_parameters(rand() % window.width, window.height / 2, 100, 150, 10, 100);
+			enemy.activ = true;
+			//enemy.item.push_back({ {100,  1300, 70, 70, 20}, (HBITMAP)LoadImageW(NULL, L"sword.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE), item_::Sword });
+
+			//enemy.activ = true;
+			//enemy.set_parameters(rand() % window.width, window.height / 2, 100, 150, 10, 100);
 
 		}
-
 
 	}
 
@@ -573,12 +598,21 @@ void ShowObject(HDC hMemDC) {
 		}
 	}
 
-	if (!enemy.anim[0].empty() && enemy.currentFrame < enemy.anim[0].size()) {
+	if (!enemy.anim[enemy.get_anim_index()].empty() && enemy.currentFrame < enemy.anim[enemy.get_anim_index()].size()) {
 
-		DrawBitmap(hMemDC, enemy.model.x, enemy.model.y, enemy.model.width, enemy.model.height, enemy.anim[0][enemy.currentFrame], true);
+		DrawBitmap(hMemDC, enemy.model.x, enemy.model.y, enemy.model.width, enemy.model.height, enemy.anim[enemy.get_anim_index()][enemy.currentFrame], true);
 
+		/*if (enemy.activ) {
+
+			for (int i = 0; i < enemy.anim[1].size(); i++) {
+
+				DrawBitmap(hMemDC, enemy.model.x, enemy.model.y, enemy.model.width, enemy.model.height, enemy.anim[1][i], true);
+
+			}
+
+		}*/
 	}
-
+	
 	for (auto stuff : item) {
 
 	DrawBitmap(hMemDC, stuff.model.x, stuff.model.y, stuff.model.width, stuff.model.height, stuff.picture, true);
@@ -610,7 +644,7 @@ void Colise_item() {
 
 			hero.item.push_back(item[i]);
 			item.erase(item.cbegin() + i);
-			hero.activ = true;
+			//hero.activ = true;
 
 			break;
 
