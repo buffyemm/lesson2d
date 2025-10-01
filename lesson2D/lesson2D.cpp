@@ -49,7 +49,7 @@ public:
 
 class ar : public object_ {
 
-public:
+	public:
 
 	//sprite model;
 	//HBITMAP picture;
