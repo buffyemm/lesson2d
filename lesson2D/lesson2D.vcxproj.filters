@@ -132,5 +132,29 @@
     <Image Include="ball3.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="portal0.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="portal1.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="portal2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="portal3.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="portal4.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="portal5.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="portal6.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="portal7.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
